@@ -17,6 +17,7 @@ SIZE = $(CROSS_COMPILE)size
 
 # Basic configurations
 CFLAGS += -std=c99 -Wall  
+LDFLAGS += -lpthread -pthread
 
 # Optimizations
 CFLAGS += -O0 -g
