@@ -1,5 +1,3 @@
-/* A simple server in the internet domain using TCP
-   The port number is passed as an argument */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,10 +6,87 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include <getopt.h>
+#include <stdint.h>
+#include <string.h>
+#include <ctype.h>
+
 #include "misc.h"
+
+#define OPTION "f:"
+
+struct setting_t{
+    char address[16];
+    int32_t port;
+};
+
+int32_t parse_setting(const char* setting_fn, struct setting_t* setting){
+    char pname[32];
+    char pvalue[32];
+
+    FILE *fil;
+    fil = fopen(setting_fn, "r");
+
+    if(!fil){
+        return 1;
+    }
+
+    while(fscanf(fil, "%s %s", pname, pvalue) != EOF){
+        if(!strcmp("ADDR", pname)){
+            if(!strcmp("*", pvalue)){
+                strcpy(setting->address, "\0");
+            }else{
+                strncpy(setting->address, pvalue, 15);
+                setting->address[15] = '\0';
+            }
+        }else if(!strcmp("PORT", pname)){
+           setting->port = atoi(pvalue);
+        }
+    }
+
+    fclose(fil);
+
+    return 0;
+}
+
+int start_linstiner(struct setting_t* setting){
+
+}
 
 int main(int argc, char *argv[])
 {
+    int cmd_opt = 0;
+    char setting_fn[64] = "\0";
+
+    struct setting_t setting;
+
+    while(1){
+        cmd_opt = getopt(argc, argv, OPTION);
+        if(cmd_opt == -1)
+            break;
+        switch (cmd_opt) {
+            case 'f':
+                strcpy(setting_fn, optarg);
+                break;
+            case '?':
+                fprintf(stderr, "Illegal option:-%c\n", isprint(optopt)?optopt:'#');
+                break;
+            default:
+                fprintf(stderr, "Not supported option exist\n");
+                break;
+        }
+    }
+
+    if(!strlen(setting_fn)){
+        die("Must provide a setting file, -fsetting");
+    }
+
+    if(parse_setting(setting_fn, &setting)){
+        die("Error parsing setting");
+    }
+
+    exit(0);
+
      int sockfd, newsockfd, portno;
      socklen_t clilen;
      char buffer[256];
