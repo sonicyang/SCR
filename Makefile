@@ -22,6 +22,10 @@ CFLAGS += -std=c99 -Wall
 CFLAGS += -O3
 
 #files
+TOOL = tool
+
+SETTING = $(TOOL)/setting
+
 SRCDIR = src
 
 INCDIR = inc
@@ -45,6 +49,8 @@ DEP = $(OBJS:.o=.d)
 #include $(MAK)
 
 all: $(EXECUTABLE)_$(SERVER) $(EXECUTABLE)_$(CLIENT)
+	@echo "[ CP ]    "$(SETTING)" -> "$(OUTDIR)/
+	@cp -a $(SETTING) $(OUTDIR)
 
 $(EXECUTABLE)_$(SERVER): $(OBJS) $(SERVER_SRC)
 	@echo "[ LD ]    "$@
