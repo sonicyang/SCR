@@ -19,7 +19,7 @@ SIZE = $(CROSS_COMPILE)size
 CFLAGS += -std=c99 -Wall  
 
 # Optimizations
-CFLAGS += -O3
+CFLAGS += -O0 -g
 
 #files
 TOOL = tool
