@@ -70,11 +70,7 @@ clean:
 	@rm -rf $(OUTDIR)/*
 	@echo "Removing All Object Files"
 
-dbg: $(EXECUTABLE)
-	openocd -f board/stm32f429discovery.cfg >/dev/null & \
-    echo $$! > $(OUTDIR)/openocd_pid && \
-    $(CROSS_COMPILE)gdb -x $(TOOLDIR)/gdbscript && \
-    cat $(OUTDIR)/openocd_pid |`xargs kill 2>/dev/null || test true` && \
-    rm -f $(OUTDIR)/openocd_pid
+dbg: $(EXECUTABLE)_$(SERVER)
+	$(CROSS_COMPILE)gdb -x $(TOOL)/gdbscript
 
 -include $(DEP)

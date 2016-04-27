@@ -1,0 +1,3 @@
+file bin/SCR_server
+b main
+r -fbin/setting
