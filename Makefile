@@ -39,8 +39,8 @@ SERVER_OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SERVER_SRC:.c=.o)))
 CLIENT_OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(CLIENT_SRC:.c=.o)))
 
 INCLUDES = $(addprefix -I,$(INCDIR))
-SERVER_INCLUDES = $(INCLUDES) $(addprefix -I,$(INCDIR)/$(SERVER))
-CLIENT_INCLUDES = $(INCLUDES) $(addprefix -I,$(INCDIR)/$(CLIENT))
+INCLUDES += $(addprefix -I,$(INCDIR)/$(SERVER))
+INCLUDES +=  $(addprefix -I,$(INCDIR)/$(CLIENT))
 
 DEP = $(OBJS:.o=.d)
 
