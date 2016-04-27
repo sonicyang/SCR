@@ -30,18 +30,16 @@ SRCDIR = src
 
 INCDIR = inc
 
-SERVER_SRC = $(addsuffix /$(SERVER).c,$(SRCDIR))
-CLIENT_SRC = $(addsuffix /$(CLIENT).c,$(SRCDIR))
-
 SRC += $(wildcard $(addsuffix /*.c,$(SRCDIR)))
-SRC := $(filter-out $(SERVER_SRC), $(SRC))
-SRC := $(filter-out $(CLIENT_SRC), $(SRC))
+SERVER_SRC = $(SRC) $(wildcard $(addsuffix /$(SERVER)/*.c,$(SRCDIR)))
+CLIENT_SRC = $(SRC) $(wildcard $(addsuffix /$(CLIENT)/*.c,$(SRCDIR)))
 
-OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SRC:.c=.o)))
 SERVER_OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SERVER_SRC:.c=.o)))
 CLIENT_OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(CLIENT_SRC:.c=.o)))
 
 INCLUDES = $(addprefix -I,$(INCDIR))
+SERVER_INCLUDES = $(INCLUDES) $(addprefix -I,$(INCDIR)/$(SERVER))
+CLIENT_INCLUDES = $(INCLUDES) $(addprefix -I,$(INCDIR)/$(CLIENT))
 
 DEP = $(OBJS:.o=.d)
 
@@ -54,11 +52,11 @@ all: $(EXECUTABLE)_$(SERVER) $(EXECUTABLE)_$(CLIENT)
 	@echo "[ CP ]    "$(SETTING)" -> "$(OUTDIR)/
 	@cp -a $(SETTING) $(OUTDIR)
 
-$(EXECUTABLE)_$(SERVER): $(OBJS) $(SERVER_OBJS)
+$(EXECUTABLE)_$(SERVER): $(SERVER_OBJS)
 	@echo "[ LD ]    "$@
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-$(EXECUTABLE)_$(CLIENT): $(OBJS) $(CLIENT_OBJS)
+$(EXECUTABLE)_$(CLIENT): $(CLIENT_OBJS)
 	@echo "[ LD ]    "$@
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
