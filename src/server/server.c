@@ -9,70 +9,13 @@
 
 #include <getopt.h>
 #include <stdint.h>
-#include <string.h>
 #include <ctype.h>
 #include <pthread.h>
 
 #include "misc.h"
+#include "setting.h"
 
 #define OPTION "f:"
-
-struct setting_t{
-    char address[16];
-    int32_t port;
-    int32_t max_user;
-};
-
-int32_t parse_setting(const char* setting_fn, struct setting_t* setting){
-    char pname[32];
-    char pvalue[32];
-    FILE *fil;
-
-    printf("Parsing Setting File....");
-
-    fil = fopen(setting_fn, "r");
-
-    if(!fil){
-        die("Error opening setting");
-    }
-
-    while(fscanf(fil, "%s %s", pname, pvalue) != EOF){
-        if(!strcmp("ADDR", pname)){
-            if(!strcmp("*", pvalue)){
-                strcpy(setting->address, "\0");
-            }else{
-                strncpy(setting->address, pvalue, 15);
-                setting->address[15] = '\0';
-            }
-        }else if(!strcmp("PORT", pname)){
-           setting->port = atoi(pvalue);
-        }else if(!strcmp("MAX", pname)){
-           setting->max_user = atoi(pvalue);
-        }
-    }
-
-    fclose(fil);
-
-    printf("Done\n");
-
-    return 0;
-}
-
-void load_setting(struct setting_t* setting, struct sockaddr_in* address){
-    memset((char *) address, 0, sizeof(struct sockaddr_in));
-
-    address->sin_family = AF_INET;
-    address->sin_port = htons(setting->port);
-    if(!strlen(setting->address)){
-       address->sin_addr.s_addr = INADDR_ANY;
-    }else{
-        if(!inet_pton(AF_INET, setting->address, &(address->sin_addr))){
-            die("Bad IPv4 format");
-        }
-    }
-
-    return;
-}
 
 void listener(struct setting_t* setting){
     int listener_sock;
@@ -87,14 +30,12 @@ void listener(struct setting_t* setting){
 
     load_setting(setting, &address);
 
-    if(bind(listener_sock, (struct sockaddr *) &address, sizeof(struct sockaddr_in)) < 0){
+    if(bind(listener_sock, (struct sockaddr *) &address, sizeof(struct sockaddr_in)) < 0)
         die("Server Unable to bind Address");
-    }
 
     printf("LISTENER   |  Listening...\n");
-    if(listen(listener_sock, setting->max_user)){
+    if(listen(listener_sock, setting->max_user))
         die("Cannot listen on the socket");
-    }
 
     return;
 }
