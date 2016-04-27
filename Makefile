@@ -38,6 +38,8 @@ SRC := $(filter-out $(SERVER_SRC), $(SRC))
 SRC := $(filter-out $(CLIENT_SRC), $(SRC))
 
 OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SRC:.c=.o)))
+SERVER_OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SERVER_SRC:.c=.o)))
+CLIENT_OBJS += $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(CLIENT_SRC:.c=.o)))
 
 INCLUDES = $(addprefix -I,$(INCDIR))
 
@@ -52,11 +54,11 @@ all: $(EXECUTABLE)_$(SERVER) $(EXECUTABLE)_$(CLIENT)
 	@echo "[ CP ]    "$(SETTING)" -> "$(OUTDIR)/
 	@cp -a $(SETTING) $(OUTDIR)
 
-$(EXECUTABLE)_$(SERVER): $(OBJS) $(SERVER_SRC)
+$(EXECUTABLE)_$(SERVER): $(OBJS) $(SERVER_OBJS)
 	@echo "[ LD ]    "$@
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-$(EXECUTABLE)_$(CLIENT): $(OBJS) $(CLIENT_SRC)
+$(EXECUTABLE)_$(CLIENT): $(OBJS) $(CLIENT_OBJS)
 	@echo "[ LD ]    "$@
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
