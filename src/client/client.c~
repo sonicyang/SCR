@@ -45,7 +45,7 @@ void* recv_thread(void* p){
         printf("%s\n",buf);
     }
 }
-void start(char name[])
+void start()
 {
     //create a thread to listen to update other's message
     pthread_t id;
@@ -73,6 +73,6 @@ int main(int argc, char *argv[])
     char name[30];
     printf("please enter your name");
     scanf("%s",name);
-    start(name);
+    start();
     return 0;
 }

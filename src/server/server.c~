@@ -18,7 +18,7 @@
 #define option "f:"
 
 int listener_sock;
-int fd_list[30] = {0};
+int fd_list[3] = {0};
 
 void listener(struct setting_t* setting){
     struct sockaddr_in address;
