@@ -42,14 +42,14 @@ static void listener_free_socket(void* argument){
 }
 
 static void listener_free_clients(void* argument){
-    struct pool_t* pool = (struct pool_t*)argument;
-    struct client_t* clients = (struct client_t*)pool->data;
+    struct pool_t* pool = (struct pool_t*)*(struct pool_t**)argument;
+    struct client_t** clients = (struct client_t**)pool->data;
     int i;
 
     for(i = 0; i < pool->size; i++){
         if(pool->used_mark[i] == 1){
-            pthread_cancel(clients[i].thread_id);
-            pthread_join(clients[i].thread_id, NULL);
+            pthread_cancel(clients[i]->thread_id);
+            pthread_join(clients[i]->thread_id, NULL);
         }
     }
 
