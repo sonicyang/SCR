@@ -62,11 +62,12 @@ void listener(struct setting_t* setting){
     int connected_user = 0;
     struct pool_t* clients;
     struct client_t* client;
+    int i;
 
     pthread_cleanup_push(listener_free_socket, &listener_sock);
     pthread_cleanup_push(listener_free_clients, &clients);
 
-    clients = create_pool(sizeof(struct client_t), setting->max_user);
+    clients = create_pool(sizeof(struct client_t));
 
     printf("LISTENER   |  Initialzing...\n");
     /*clients_list.clients = (struct client_t**)malloc(setting->max_user * sizeof(struct client_t*));*/
@@ -95,15 +96,14 @@ void listener(struct setting_t* setting){
         connected_user++;
 
         // XXX: Pass Information between threads are more propreiate
-        client = ((struct client_t*)clients->data) + clients->size - 1;
-        while(client != (struct client_t*)clients->data){
-            if(client->activate == -1){
-                pthread_join(client->thread_id, NULL);
-                pool_free(clients, client);
-                client->activate = 0;
-            }
-            client--;
-        }
+        /*for(i = 0; i < clients->size; i++){*/
+            /*if(((struct client_t*)(clients->data[i]))->activate == -1){*/
+                /*pthread_join(client->thread_id, NULL);*/
+                /*pool_free(clients, clients->data[i]);*/
+                /*client->activate = 0;*/
+            /*}*/
+            /*client--;*/
+        /*}*/
     }
 
     pthread_cleanup_pop(1);
