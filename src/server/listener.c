@@ -70,9 +70,6 @@ void listener(struct setting_t* setting){
     clients = create_pool(sizeof(struct client_t));
 
     printf("LISTENER   |  Initialzing...\n");
-    /*clients_list.clients = (struct client_t**)malloc(setting->max_user * sizeof(struct client_t*));*/
-    /*memset(clients_list.clients, 0, setting->max_user * sizeof(struct client_t*));*/
-    /*clients_list.size = setting->max_user;*/
 
     printf("LISTENER   |  Opening Socket...\n");
     listener_sock = socket(AF_INET, SOCK_STREAM, 0);
