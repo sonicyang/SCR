@@ -95,15 +95,15 @@ void listener(struct setting_t* setting){
         wait_for_client(&listener_sock, client);
         connected_user++;
 
-        // XXX: Pass Information between threads are more propreiate
-        /*for(i = 0; i < clients->size; i++){*/
-            /*if(((struct client_t*)(clients->data[i]))->activate == -1){*/
-                /*pthread_join(client->thread_id, NULL);*/
-                /*pool_free(clients, clients->data[i]);*/
-                /*client->activate = 0;*/
-            /*}*/
-            /*client--;*/
-        /*}*/
+        /*XXX: Pass Information between threads are more propreiate*/
+        for(i = 0; i < clients->size; i++){
+            if(((struct client_t*)(clients->data[i]))->activate == -1){
+                pthread_join(client->thread_id, NULL);
+                pool_free(clients, clients->data[i]);
+                client->activate = 0;
+            }
+            client--;
+        }
     }
 
     pthread_cleanup_pop(1);
