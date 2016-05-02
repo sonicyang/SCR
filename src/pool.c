@@ -33,6 +33,9 @@ struct pool_t* create_pool(size_t e_size){
     }
 
     pool->lock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
+    if(pool->lock == NULL){
+        die("Failed to initialize pool lock");
+    }
 
     pthread_mutex_init(pool->lock, NULL);
 
@@ -59,6 +62,7 @@ void delete_pool(struct pool_t* pool){
     pool = NULL;
 
     pthread_mutex_destroy(ptr);
+    free(ptr);
 
     return;
 }
