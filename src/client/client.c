@@ -7,11 +7,18 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#include "misc.h"
+
 void error(const char *msg)
 {
     perror(msg);
     exit(0);
 }
+
+struct packet_t{
+    command_t command;
+    int parameter;
+} __attribute__((packed));
 
 int main(int argc, char *argv[])
 {
@@ -44,7 +51,21 @@ int main(int argc, char *argv[])
     printf("Please enter the message: ");
     bzero(buffer,256);
     fgets(buffer,255,stdin);
+
+    struct packet_t packet;
+    packet.command = MESG;
+    packet.parameter = strlen(buffer);
+
+    n = write(sockfd,&packet,sizeof(struct packet_t));
     n = write(sockfd,buffer,strlen(buffer));
+    n = write(sockfd,&packet,sizeof(struct packet_t));
+    n = write(sockfd,buffer,strlen(buffer));
+    n = write(sockfd,&packet,sizeof(struct packet_t));
+    n = write(sockfd,buffer,strlen(buffer));
+
+    packet.command = TERM;
+    n = write(sockfd,&packet,sizeof(struct packet_t));
+
     if (n < 0)
          error("ERROR writing to socket");
     bzero(buffer,256);

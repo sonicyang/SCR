@@ -5,6 +5,7 @@
 #include <pthread.h>
 
 #include "setting.h"
+#include "misc.h"
 
 struct client_t{
     struct sockaddr_in address;
@@ -13,6 +14,11 @@ struct client_t{
     pthread_t thread_id;
     int activate;
 };
+
+struct packet_t{
+    command_t command;
+    int parameter;
+} __attribute__((packed));
 
 void client_clean_up(void* argument);
 void client_handler(struct client_t* argument);

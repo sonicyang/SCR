@@ -3,4 +3,10 @@
 
 void die(const char *msg);
 
+typedef enum{
+    MESG = 0,
+    TERM,
+    ACK
+}command_t;
+
 #endif//__MISC_H__
