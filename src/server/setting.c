@@ -15,8 +15,6 @@ int parse_setting(const char* setting_fn, struct setting_t* setting){
     char pvalue[32];
     FILE *fil;
 
-    printf("Parsing Setting File....");
-
     fil = fopen(setting_fn, "r");
 
     if(!fil){
@@ -39,8 +37,6 @@ int parse_setting(const char* setting_fn, struct setting_t* setting){
     }
 
     fclose(fil);
-
-    printf("Done\n");
 
     return 0;
 }
