@@ -32,7 +32,7 @@ int start_listener(struct setting_t* setting, pthread_t* listener_id){
     return 0;
 }
 
-void listener_clean_up(void* argument){
+static void listener_free_socket(void* argument){
     int* sock = (int*)argument;
     close(*sock);
 }
@@ -44,7 +44,8 @@ void listener(struct setting_t* setting){
     struct client_t** clients;
     int i;
 
-    pthread_cleanup_push(listener_clean_up, &listener_sock);
+    pthread_cleanup_push(listener_free_socket, &listener_sock);
+    pthread_cleanup_push(free, clients);
 
     printf("LISTENER   |  Initialzing...\n");
     clients = (struct client_t**)malloc(setting->max_user * sizeof(struct client_t*));
@@ -80,6 +81,7 @@ void listener(struct setting_t* setting){
             pthread_cancel(clients[i]->thread_id);
     }
 
+    pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
     return;
 }
