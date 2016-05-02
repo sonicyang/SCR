@@ -4,7 +4,7 @@
 
 #include "misc.h"
 
-extern inline void die(const char *msg){
+void die(const char *msg){
     if(!errno)
         fprintf(stderr, "%s\n", msg);
     else
