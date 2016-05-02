@@ -15,6 +15,8 @@ struct client_list_t{
     int size;
 };
 
+struct pool_t* message_pool;
+
 static struct client_t* wait_for_client(int* listener_sock, struct client_t* client){
     client->length = sizeof(client->address);
     client->socket = accept(*listener_sock, (struct sockaddr*)&(client->address), &(client->length));
@@ -56,6 +58,20 @@ static void listener_free_clients(void* argument){
     delete_pool(pool);
 }
 
+static void listener_free_message_pool(void* argument){
+    struct pool_t* pool = (struct pool_t*)*(struct pool_t**)argument;
+    struct message_t** messages = (struct message_t**)pool->data;
+    int i;
+
+    for(i = 0; i < pool->size; i++){
+        if(pool->used_mark[i] == 1){
+            free(messages[i]->buffer);
+        }
+    }
+
+    delete_pool(message_pool);
+}
+
 void listener(struct setting_t* setting){
     int listener_sock;
     struct sockaddr_in address;
@@ -64,10 +80,12 @@ void listener(struct setting_t* setting){
     struct client_t* client;
     int i;
 
+    pthread_cleanup_push(listener_free_message_pool, &message_pool);
     pthread_cleanup_push(listener_free_socket, &listener_sock);
     pthread_cleanup_push(listener_free_clients, &clients);
 
     clients = create_pool(sizeof(struct client_t));
+    message_pool = create_pool(sizeof(struct message_t));
 
     printf("LISTENER   |  Initialzing...\n");
 
@@ -103,6 +121,7 @@ void listener(struct setting_t* setting){
         }
     }
 
+    pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
     return;

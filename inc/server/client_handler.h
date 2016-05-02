@@ -15,6 +15,12 @@ struct client_t{
     int activate;
 };
 
+struct message_t{
+    int timestamp;
+    char* sender;
+    char* buffer;
+};
+
 struct packet_t{
     command_t command;
     int parameter;

@@ -2,8 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "client_handler.h"
+#include "pool.h"
 #include "misc.h"
 
 void client_clean_up(void* argument){
@@ -12,13 +16,18 @@ void client_clean_up(void* argument){
     tmp->activate = -1;
 }
 
+extern struct pool_t* message_pool;
+
 void client_handler(struct client_t* argument){
-    char* buffer;
+    char name[64];
     struct packet_t packet;
+    struct message_t* message;
     int byte_read;
     int run = 1;
 
     pthread_cleanup_push(client_clean_up, argument);
+
+    strcpy(name, inet_ntoa(argument->address.sin_addr));
 
     while(run){
         byte_read = read(argument->socket , &packet, sizeof(struct packet_t));
@@ -31,12 +40,17 @@ void client_handler(struct client_t* argument){
 
         switch(packet.command){
             case MESG:
-                buffer = malloc(packet.parameter + 1);
-                memset(buffer, 0, packet.parameter);
-                byte_read = read(argument->socket , buffer, packet.parameter);
+                message = pool_allocate(message_pool);
+                message->timestamp = (int)time(NULL);
+                message->sender = name;
+                message->buffer = malloc(packet.parameter + 1);
+                memset(message->buffer, 0, packet.parameter);
+
+                byte_read = read(argument->socket , message->buffer, packet.parameter);
                 if(byte_read != packet.parameter)
                     die("Data lose detected");
-                printf("Here is the message: %s\n",buffer);
+
+                printf("Here is the message: %s\n", message->buffer);
                 break;
             case TERM:
                 run = 0;
