@@ -3,6 +3,7 @@
 #include <pthread.h>
 
 #include "pool.h"
+#include "misc.h"
 
 struct pool_t* create_pool(size_t e_size){
     struct pool_t* pool = (struct pool_t*)malloc(sizeof(struct pool_t));
@@ -11,13 +12,24 @@ struct pool_t* create_pool(size_t e_size){
     pool->size = 2;
     pool->element_size = e_size;
     pool->used = 0;
+
     pool->used_mark = malloc(sizeof(int) * pool->size);
+    if(pool->used_mark == NULL){
+        die("Failed to initialize pool marking memory");
+    }
     memset((void*)pool->used_mark, 0, sizeof(int) * pool->size);
+
     pool->data = malloc(sizeof(void*) * pool->size);
+    if(pool->data == NULL){
+        die("Failed to initialize pool memory");
+    }
     memset((void*)pool->data, 0, sizeof(void*) * pool->size);
 
     for(i = 0; i < pool->size; i++){
         pool->data[i] = malloc(pool->element_size);
+        if(pool->data[i] == NULL){
+            die("Failed to initialize pool element memory");
+        }
     }
 
     pool->lock = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
@@ -31,7 +43,7 @@ void delete_pool(struct pool_t* pool){
     int i;
 
     if(pool == NULL)
-        return;
+        die("No such pool");
 
     pthread_mutex_t* ptr = pool->lock;
 
@@ -55,7 +67,7 @@ static void resize_pool(struct pool_t* pool, size_t size){
     int i;
 
     if(pool == NULL)
-        return;
+        die("No such pool");
 
     pthread_mutex_lock(pool->lock);
 
@@ -77,7 +89,7 @@ void* pool_allocate(struct pool_t* pool){
     int i = 0;
 
     if(pool == NULL)
-        return NULL;
+        die("No such pool");
 
     if(pool->used == pool->size){
         resize_pool(pool, pool->size*2);
@@ -101,7 +113,7 @@ void pool_free(struct pool_t* pool, void* ptr){
     int i;
 
     if(pool == NULL)
-        return;
+        die("No such pool");
 
     pthread_mutex_lock(pool->lock);
     for(i = 0; i < pool->size; i++){
