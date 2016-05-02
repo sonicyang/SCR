@@ -9,6 +9,7 @@ struct pool_t{
     size_t size;
     int* used_mark;
     size_t used;
+    pthread_mutex_t* lock;
 };
 
 struct pool_t* create_pool(size_t);
