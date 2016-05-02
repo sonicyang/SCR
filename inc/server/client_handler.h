@@ -11,6 +11,7 @@ struct client_t{
     socklen_t length;
     int socket;
     pthread_t thread_id;
+    int activate;
 };
 
 void client_clean_up(void* argument);

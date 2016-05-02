@@ -18,8 +18,10 @@ struct listener_t listener_instance;
 
 void signal_handler(int signal_number)
 {
-    if (signal_number == SIGINT)
+    if (signal_number == SIGINT){
         pthread_cancel(listener_instance.thread_id);
+        pthread_join(listener_instance.thread_id, NULL);
+    }
 }
 
 int main(int argc, char *argv[]){
