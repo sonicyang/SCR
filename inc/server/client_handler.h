@@ -15,15 +15,8 @@ struct client_t{
     int activate;
 };
 
-struct message_t{
-    int timestamp;
-    char* sender;
-    char* buffer;
-};
-
 void client_clean_up(void* argument);
 void client_handler(struct client_t* argument);
 int start_client_handler(struct client_t* arg);
-
 
 #endif//__CLIENT_HANDLER_H__

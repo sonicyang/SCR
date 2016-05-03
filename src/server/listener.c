@@ -9,6 +9,7 @@
 #include "setting.h"
 #include "pool.h"
 #include "misc.h"
+#include "message.h"
 
 struct client_list_t{
     struct client_t** clients;
