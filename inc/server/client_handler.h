@@ -21,11 +21,6 @@ struct message_t{
     char* buffer;
 };
 
-struct packet_t{
-    command_t command;
-    int parameter;
-} __attribute__((packed));
-
 void client_clean_up(void* argument);
 void client_handler(struct client_t* argument);
 int start_client_handler(struct client_t* arg);

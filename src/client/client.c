@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+#include "packet.h"
 #include "misc.h"
 
 void error(const char *msg)
@@ -14,11 +15,6 @@ void error(const char *msg)
     perror(msg);
     exit(0);
 }
-
-struct packet_t{
-    command_t command;
-    int parameter;
-} __attribute__((packed));
 
 int main(int argc, char *argv[])
 {

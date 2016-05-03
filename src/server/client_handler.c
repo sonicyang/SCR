@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 
 #include "client_handler.h"
+#include "packet.h"
 #include "pool.h"
 #include "misc.h"
 
@@ -31,13 +32,7 @@ void client_handler(struct client_t* argument){
     strcpy(name, inet_ntoa(argument->address.sin_addr));
 
     while(run){
-        n = read(argument->socket , &packet, sizeof(struct packet_t));
-
-        if(n < 0)
-            die("Error on reading socket");
-
-        if(n < sizeof(struct packet_t))
-            die("Got non-standard packet");
+        wait_for_packet(&(argument->socket), &packet);
 
         switch(packet.command){
             case MESG:
@@ -54,14 +49,10 @@ void client_handler(struct client_t* argument){
                 printf("Here is the message: %s\n", message->buffer);
                 break;
             case RECV:
-                packet.command = RECV;
-                packet.parameter = message_pool->used - last_unread_message;
-                write(argument->socket, &packet, sizeof(struct packet_t));
+                send_packet(&(argument->socket), RECV, message_pool->used - last_unread_message);
 
                 for(i = last_unread_message; i < message_pool->size; i++){
-                    packet.command = MESG;
-                    packet.parameter = strlen(((struct message_t*)(message_pool->data[i]))->buffer);
-                    write(argument->socket, &packet, sizeof(struct packet_t));
+                    send_packet(&(argument->socket), MESG, strlen(((struct message_t*)(message_pool->data[i]))->buffer));
                     write(argument->socket, ((struct message_t*)(message_pool->data[i]))->buffer, packet.parameter);
                 }
                 break;
