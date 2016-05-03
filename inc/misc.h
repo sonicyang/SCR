@@ -5,6 +5,7 @@ void die(const char *msg);
 
 typedef enum{
     MESG = 0,
+    RECV,
     TERM,
     ACK
 }command_t;

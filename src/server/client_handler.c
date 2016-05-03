@@ -22,7 +22,8 @@ void client_handler(struct client_t* argument){
     char name[64];
     struct packet_t packet;
     struct message_t* message;
-    int byte_read;
+    int last_unread_message = 0;
+    int n, i;
     int run = 1;
 
     pthread_cleanup_push(client_clean_up, argument);
@@ -30,12 +31,12 @@ void client_handler(struct client_t* argument){
     strcpy(name, inet_ntoa(argument->address.sin_addr));
 
     while(run){
-        byte_read = read(argument->socket , &packet, sizeof(struct packet_t));
+        n = read(argument->socket , &packet, sizeof(struct packet_t));
 
-        if(byte_read < 0)
+        if(n < 0)
             die("Error on reading socket");
 
-        if(byte_read < sizeof(struct packet_t))
+        if(n < sizeof(struct packet_t))
             die("Got non-standard packet");
 
         switch(packet.command){
@@ -46,11 +47,23 @@ void client_handler(struct client_t* argument){
                 message->buffer = malloc(packet.parameter + 1);
                 memset(message->buffer, 0, packet.parameter);
 
-                byte_read = read(argument->socket , message->buffer, packet.parameter);
-                if(byte_read != packet.parameter)
+                n = read(argument->socket , message->buffer, packet.parameter);
+                if(n != packet.parameter)
                     die("Data lose detected");
 
                 printf("Here is the message: %s\n", message->buffer);
+                break;
+            case RECV:
+                packet.command = RECV;
+                packet.parameter = message_pool->used - last_unread_message;
+                write(argument->socket, &packet, sizeof(struct packet_t));
+
+                for(i = last_unread_message; i < message_pool->size; i++){
+                    packet.command = MESG;
+                    packet.parameter = strlen(((struct message_t*)(message_pool->data[i]))->buffer);
+                    write(argument->socket, &packet, sizeof(struct packet_t));
+                    write(argument->socket, ((struct message_t*)(message_pool->data[i]))->buffer, packet.parameter);
+                }
                 break;
             case TERM:
                 run = 0;
