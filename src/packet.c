@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "packet.h"
 #include "misc.h"
@@ -26,7 +27,7 @@ void send_packet(int* socket, command_t command, int param){
 void wait_for_packet(int* socket, struct packet_t* packet){
     int n;
 
-    n = read(*socket , &packet, sizeof(struct packet_t));
+    n = read(*socket , packet, sizeof(struct packet_t));
 
     if(n < 0)
         die("Error on reading socket");
