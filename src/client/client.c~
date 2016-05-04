@@ -50,9 +50,13 @@ int main(int argc, char *argv[])
 	
     while(1){
 	scanf("%s",buffer);
+    
+	printf("1");
+    	
 	packet.command = MESG;
 	send_packet(&sockfd,MESG,sizeof(buffer));
 	n = write(sockfd,buffer,sizeof(buffer));
+	printf("2");
     }
 	packet.command = TERM;  
 	n = write(sockfd,&packet,sizeof(struct packet_t));
