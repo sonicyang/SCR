@@ -35,9 +35,9 @@ void transmitter_clean_up(void* argument){
 }
 
 void client_transmitter(struct client_t* argument){
-    struct list_element_t* last_unread_message = message_list->head;
+    struct list_element_t* last_read_message = message_list->head;
 
-    argument->sem = list_allocate(argument->sem_list)->data;
+    argument->sem = list_allocate(argument->sem_list);
     sem_init(argument->sem->data, 0, 0);
 
     pthread_cleanup_push(transmitter_clean_up, argument);
@@ -45,10 +45,18 @@ void client_transmitter(struct client_t* argument){
     while(1){
         sem_wait(argument->sem->data);
 
-        while(last_unread_message != NULL){
-            send_packet(&argument->socket, MESG, (((struct message_t*)(last_unread_message->data))->size));
-            send_message(((struct message_t*)(last_unread_message->data)), &argument->socket);
-            last_unread_message = last_unread_message->next;
+        if(message_list->head != NULL){
+            if(last_read_message == NULL){
+                last_read_message = message_list->head;
+                send_packet(&argument->socket, MESG, (((struct message_t*)(last_read_message->data))->size));
+                send_message(((struct message_t*)(last_read_message->data)), &argument->socket);
+            }
+        }
+
+        while(last_read_message->next != NULL){
+            last_read_message = last_read_message->next;
+            send_packet(&argument->socket, MESG, (((struct message_t*)(last_read_message->data))->size));
+            send_message(((struct message_t*)(last_read_message->data)), &argument->socket);
         }
     }
 

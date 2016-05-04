@@ -47,25 +47,30 @@ int main(int argc, char *argv[])
     printf("Please enter the message: ");
     bzero(buffer,256);
     struct packet_t packet;
-	
+
     while(1){
-	scanf("%s",buffer);
-	packet.command = MESG;
-	send_packet(&sockfd,MESG,sizeof(buffer));
-	n = write(sockfd,buffer,sizeof(buffer));
+        scanf("%s",buffer);
+        packet.command = MESG;
+        send_packet(&sockfd,MESG,sizeof(buffer));
+        n = write(sockfd,buffer,sizeof(buffer));
+
+        wait_for_packet(&sockfd, &packet);
+        n = read(sockfd, buffer, packet.parameter);
+        buffer[n] = '\0';
+        puts(buffer);
     }
-	packet.command = TERM;  
+	packet.command = TERM;
 	n = write(sockfd,&packet,sizeof(struct packet_t));
-    
+
 	if (n < 0)
 	     error("ERROR writing to socket");
 	bzero(buffer,256);
-    
+
 	n = read(sockfd,buffer,255);
 	if (n < 0)
 	     error("ERROR reading from socket");
 	printf("%s\n",buffer);
-    
+
     close(sockfd);
     return 0;
 }
