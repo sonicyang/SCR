@@ -44,7 +44,7 @@ void delete_list(struct list_t* list){
     return;
 }
 
-void* list_allocate(struct list_t* list){
+struct list_element_t* list_allocate(struct list_t* list){
     struct list_element_t* element;
 
     if(list == NULL)
@@ -64,10 +64,10 @@ void* list_allocate(struct list_t* list){
     list->size++;
     pthread_mutex_unlock(list->lock);
 
-    return element->data;
+    return element;
 }
 
-void list_pop(struct list_t* list){
+struct list_element_t* list_pop(struct list_t* list){
     struct list_element_t* element = list->head;
 
     if(list == NULL)
@@ -82,8 +82,37 @@ void list_pop(struct list_t* list){
     list->size--;
     pthread_mutex_unlock(list->lock);
 
+    return element;
+}
+
+void list_free(struct list_t* list, struct list_element_t* element){
+    pthread_mutex_lock(list->lock);
     pool_free(list->memory_pool, element->data);
     pool_free(list->list_pool, element);
+    pthread_mutex_unlock(list->lock);
 
     return;
+}
+
+void list_delete(struct list_t* list, struct list_element_t* element){
+    pthread_mutex_lock(list->lock);
+    if(element->next){
+        element->next->prev = element->prev;
+    }
+
+    if(element->prev){
+        element->prev->next = element->next;
+    }
+
+    if(element==list->head){
+         list->head = element->next;
+    }
+
+    if(element==list->tail){
+         list->tail = element->prev;
+    }
+
+    list->size--;
+    pthread_mutex_unlock(list->lock);
+
 }

@@ -21,8 +21,10 @@ struct list_t{
 
 struct list_t* create_list(size_t);
 void delete_list(struct list_t*);
-void* list_allocate(struct list_t*);
-void list_free(struct list_t*, void*);
+struct list_element_t* list_allocate(struct list_t*);
+void list_delete(struct list_t*, struct list_element_t*);
+struct list_element_t* list_pop(struct list_t*);
+void list_free(struct list_t*, struct list_element_t*);
 
 
 #endif//__LIST_H__
