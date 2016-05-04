@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 
 #include "client_handler.h"
+#include "list.h"
 #include "packet.h"
 #include "pool.h"
 #include "message.h"
@@ -22,8 +23,8 @@ void client_handler(struct client_t* argument){
     char name[64];
     struct packet_t packet;
     struct message_t* message;
-    int last_unread_message = 0;
-    int i;
+    struct list_element_t* last_unread_message = message_list->head;
+    int read = 0;
     int run = 1;
 
     pthread_cleanup_push(client_clean_up, argument);
@@ -35,19 +36,22 @@ void client_handler(struct client_t* argument){
 
         switch(packet.command){
             case MESG:
-                message = pool_allocate(message_pool);
+                message = list_allocate(message_list);
                 init_message(message, name, packet.parameter);
                 recv_message(message, &argument->socket);
 
                 printf("Here is the message: %s\n", message->buffer);
                 break;
             case RECV:
-                send_packet(&(argument->socket), RECV, message_pool->used - last_unread_message);
+                send_packet(&(argument->socket), RECV, message_list->size - read);
 
-                for(i = last_unread_message; i < message_pool->size; i++){
-                    send_packet(&argument->socket, MESG, strlen(((struct message_t*)(message_pool->data[i]))->buffer));
-                    send_message((struct message_t*)(message_pool->data[i]), &argument->socket);
+                while(last_unread_message != NULL){
+                    send_packet(&argument->socket, MESG, (((struct message_t*)(last_unread_message->data))->size));
+                    send_message(((struct message_t*)(last_unread_message->data)), &argument->socket);
+                    read++;
+                    last_unread_message = last_unread_message->next;
                 }
+
                 break;
             case TERM:
                 run = 0;

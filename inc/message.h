@@ -4,9 +4,10 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
+#include "list.h"
 #include "setting.h"
 
-extern struct pool_t* message_pool;
+extern struct list_t* message_list;
 
 struct message_t{
     int timestamp;
