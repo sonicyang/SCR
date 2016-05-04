@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <semaphore.h>
 
 #include "listener.h"
 #include "client_handler.h"
@@ -51,8 +52,8 @@ static void listener_free_clients(void* argument){
 
     for(i = 0; i < pool->size; i++){
         if(pool->used_mark[i] == 1){
-            pthread_cancel(clients[i]->thread_id);
-            pthread_join(clients[i]->thread_id, NULL);
+            pthread_cancel(clients[i]->reciver_thread_id);
+            pthread_join(clients[i]->reciver_thread_id, NULL);
             close(clients[i]->socket);
         }
     }
@@ -61,15 +62,9 @@ static void listener_free_clients(void* argument){
 }
 
 static void listener_free_message_pool(void* argument){
-    struct pool_t* pool = (struct pool_t*)*(struct pool_t**)argument;
-    struct message_t** messages = (struct message_t**)pool->data;
-    int i;
-
-    for(i = 0; i < pool->size; i++){
-        if(pool->used_mark[i] == 1){
-            free(messages[i]->buffer);
-        }
-    }
+    struct list_t* list = (struct list_t*)*(struct list_t**)argument;
+    while(list->head != NULL)
+        list_free(list, list_pop(list));
 
     delete_list(message_list);
 }
@@ -79,6 +74,7 @@ void listener(struct setting_t* setting){
     struct sockaddr_in address;
     int connected_user = 0;
     struct pool_t* clients;
+    struct list_t* client_sems;
     struct client_t* client;
     int i;
 
@@ -87,6 +83,7 @@ void listener(struct setting_t* setting){
     pthread_cleanup_push(listener_free_clients, &clients);
 
     clients = create_pool(sizeof(struct client_t));
+    client_sems = create_list(sizeof(sem_t));
     message_list = create_list(sizeof(struct message_t));
 
     printf("LISTENER   |  Initialzing...\n");
@@ -109,13 +106,14 @@ void listener(struct setting_t* setting){
 
     while(1){
         client = pool_allocate(clients);
+        client->sem_list = client_sems;
         wait_for_client(&listener_sock, client);
         connected_user++;
 
         /*XXX: Pass Information between threads are more propreiate*/
         for(i = 0; i < clients->size; i++){
             if(((struct client_t*)(clients->data[i]))->activate == -1){
-                pthread_join(client->thread_id, NULL);
+                pthread_join(client->reciver_thread_id, NULL);
                 close(((struct client_t*)(clients->data[i]))->socket);
                 pool_free(clients, clients->data[i]);
                 client->activate = 0;

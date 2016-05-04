@@ -13,18 +13,40 @@
 #include "message.h"
 #include "misc.h"
 
+void transmitter_clean_up(void* argument){
+    struct client_t* tmp = (struct client_t*) argument;
+    list_free(tmp->sem_list, tmp->sem);
+}
+
+void client_transmitter(struct client_t* argument){
+    argument->sem = list_allocate(argument->sem_list)->data;
+    sem_init(argument->sem, 0, 0);
+
+    pthread_cleanup_push(transmitter_clean_up, argument);
+
+    sem_wait(argument->sem);
+
+    pthread_cleanup_pop(1);
+}
+
 void client_clean_up(void* argument){
     struct client_t* tmp = (struct client_t*) argument;
+    pthread_cancel(tmp->transmitter_thread_id);
+    pthread_join(tmp->transmitter_thread_id, NULL);
     tmp->activate = -1;
 }
 
-void client_handler(struct client_t* argument){
+void client_reciver(struct client_t* argument){
     char name[64];
     struct packet_t packet;
-    struct message_t* message;
+    struct list_element_t* message;
     struct list_element_t* last_unread_message = message_list->head;
     int read = 0;
     int run = 1;
+
+    if(pthread_create(&argument->transmitter_thread_id, NULL, (void*)client_transmitter, (void*)argument)){
+        die("Failed on creating Client Transmitter thread");
+    }
 
     pthread_cleanup_push(client_clean_up, argument);
 
@@ -36,10 +58,10 @@ void client_handler(struct client_t* argument){
         switch(packet.command){
             case MESG:
                 message = list_allocate(message_list);
-                init_message(message, name, packet.parameter);
-                recv_message(message, &argument->socket);
+                init_message(message->data, name, packet.parameter);
+                recv_message(message->data, &argument->socket);
 
-                printf("Here is the message: %s\n", message->buffer);
+                printf("Here is the message: %s\n", ((struct message_t*)(message->data))->buffer);
                 break;
             case RECV:
                 send_packet(&(argument->socket), RECV, message_list->size - read);
@@ -66,8 +88,8 @@ void client_handler(struct client_t* argument){
 }
 
 int start_client_handler(struct client_t* arg){
-    if(pthread_create(&(arg->thread_id), NULL, (void*)client_handler, (void*)arg)){
-        die("Failed on creating Client Handler thread");
+    if(pthread_create(&(arg->reciver_thread_id), NULL, (void*)client_reciver, (void*)arg)){
+        die("Failed on creating Client Reciver thread");
     }
     return 0;
 }
