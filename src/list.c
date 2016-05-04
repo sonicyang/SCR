@@ -9,6 +9,10 @@
 struct list_t* create_list(size_t e_size){
     struct list_t* list = (struct list_t*)malloc(sizeof(struct list_t));
 
+    if(list == NULL){
+        die("Failed to create list");
+    }
+
     list->list_pool = create_pool(sizeof(struct list_element_t));
     list->memory_pool = create_pool(e_size);
 
@@ -16,6 +20,7 @@ struct list_t* create_list(size_t e_size){
     list->head = NULL;
     list->tail = NULL;
 
+    list->lock = malloc(sizeof(pthread_mutex_t));
     pthread_mutex_init(list->lock, NULL);
 
     return list;
@@ -51,7 +56,10 @@ void* list_allocate(struct list_t* list){
 
     pthread_mutex_lock(list->lock);
     element->prev = list->tail;
-    list->tail->next = element;
+    if(list->tail)
+        list->tail->next = element;
+    else
+        list->head = element;
     list->tail = element;
     list->size++;
     pthread_mutex_unlock(list->lock);
@@ -67,7 +75,10 @@ void list_pop(struct list_t* list){
 
     pthread_mutex_lock(list->lock);
     list->head = element->next;
-    element->next->prev = NULL;
+    if(element->next->prev)
+        element->next->prev = NULL;
+    else
+        list->tail = NULL;
     list->size--;
     pthread_mutex_unlock(list->lock);
 
