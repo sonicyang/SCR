@@ -22,7 +22,7 @@ void destroy_message(struct message_t* message){
 void send_message(struct message_t* message, int* socket){
     int n;
 
-    n = write(*socket, message, message->size);
+    n = write(*socket, message->buffer, message->size);
     if(n != message->size)
         die("Data lose detected");
 }
