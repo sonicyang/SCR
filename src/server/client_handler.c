@@ -15,7 +15,6 @@
 
 void client_clean_up(void* argument){
     struct client_t* tmp = (struct client_t*) argument;
-    close(tmp->socket);
     tmp->activate = -1;
 }
 
