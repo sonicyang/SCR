@@ -51,7 +51,7 @@ static void listener_free_clients(void* argument){
     int i;
 
     for(i = 0; i < pool->size; i++){
-        if(pool->used_mark[i] == 1){
+        if(pool->used_mark[i] == 1 && clients[i]->activate == 1){
             pthread_cancel(clients[i]->reciver_thread_id);
             pthread_join(clients[i]->reciver_thread_id, NULL);
             close(clients[i]->socket);
@@ -59,6 +59,18 @@ static void listener_free_clients(void* argument){
     }
 
     delete_pool(pool);
+}
+
+static void listener_free_sems(void* argument){
+    struct list_t* list = (struct list_t*)*(struct list_t**)argument;
+    struct list_element_t* ptr = list->head;
+
+    while(ptr != NULL){
+        sem_destroy(ptr->data);
+        ptr = ptr->next;
+    }
+
+    delete_list(list);
 }
 
 static void listener_free_message_pool(void* argument){
@@ -81,6 +93,7 @@ void listener(struct setting_t* setting){
     pthread_cleanup_push(listener_free_message_pool, &message_list);
     pthread_cleanup_push(listener_free_socket, &listener_sock);
     pthread_cleanup_push(listener_free_clients, &clients);
+    pthread_cleanup_push(listener_free_sems, &client_sems);
 
     clients = create_pool(sizeof(struct client_t));
     client_sems = create_list(sizeof(sem_t));
@@ -106,6 +119,7 @@ void listener(struct setting_t* setting){
 
     while(1){
         client = pool_allocate(clients);
+        client->activate = 0;
         client->sem_list = client_sems;
         wait_for_client(&listener_sock, client);
         connected_user++;
@@ -122,6 +136,7 @@ void listener(struct setting_t* setting){
         }
     }
 
+    pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
     pthread_cleanup_pop(1);
