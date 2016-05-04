@@ -13,8 +13,8 @@ struct list_t* create_list(size_t e_size){
     list->memory_pool = create_pool(e_size);
 
     list->size = 0;
-    list->head = 0;
-    list->tail = 0;
+    list->head = NULL;
+    list->tail = NULL;
 
     pthread_mutex_init(list->lock, NULL);
 
