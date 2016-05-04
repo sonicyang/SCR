@@ -13,18 +13,44 @@
 #include "message.h"
 #include "misc.h"
 
+static void brocast_message_recv(struct list_t* sems){
+    struct list_element_t* ptr;
+
+    pthread_mutex_lock(sems->lock);
+
+    ptr = sems->head;
+    while(ptr != NULL){
+        sem_post(ptr->data);
+        ptr = ptr->next;
+    }
+
+    pthread_mutex_unlock(sems->lock);
+    return;
+}
+
 void transmitter_clean_up(void* argument){
     struct client_t* tmp = (struct client_t*) argument;
+    list_delete(tmp->sem_list, tmp->sem);
     list_free(tmp->sem_list, tmp->sem);
 }
 
 void client_transmitter(struct client_t* argument){
+    struct list_element_t* last_unread_message = message_list->head;
+
     argument->sem = list_allocate(argument->sem_list)->data;
-    sem_init(argument->sem, 0, 0);
+    sem_init(argument->sem->data, 0, 0);
 
     pthread_cleanup_push(transmitter_clean_up, argument);
 
-    sem_wait(argument->sem);
+    while(1){
+        sem_wait(argument->sem->data);
+
+        while(last_unread_message != NULL){
+            send_packet(&argument->socket, MESG, (((struct message_t*)(last_unread_message->data))->size));
+            send_message(((struct message_t*)(last_unread_message->data)), &argument->socket);
+            last_unread_message = last_unread_message->next;
+        }
+    }
 
     pthread_cleanup_pop(1);
 }
@@ -40,8 +66,6 @@ void client_reciver(struct client_t* argument){
     char name[64];
     struct packet_t packet;
     struct list_element_t* message;
-    struct list_element_t* last_unread_message = message_list->head;
-    int read = 0;
     int run = 1;
 
     if(pthread_create(&argument->transmitter_thread_id, NULL, (void*)client_transmitter, (void*)argument)){
@@ -60,19 +84,11 @@ void client_reciver(struct client_t* argument){
                 message = list_allocate(message_list);
                 init_message(message->data, name, packet.parameter);
                 recv_message(message->data, &argument->socket);
+                brocast_message_recv(argument->sem_list);
 
                 printf("Here is the message: %s\n", ((struct message_t*)(message->data))->buffer);
                 break;
             case RECV:
-                send_packet(&(argument->socket), RECV, message_list->size - read);
-
-                while(last_unread_message != NULL){
-                    send_packet(&argument->socket, MESG, (((struct message_t*)(last_unread_message->data))->size));
-                    send_message(((struct message_t*)(last_unread_message->data)), &argument->socket);
-                    read++;
-                    last_unread_message = last_unread_message->next;
-                }
-
                 break;
             case TERM:
                 run = 0;

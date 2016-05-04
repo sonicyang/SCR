@@ -16,7 +16,7 @@ struct client_t{
     pthread_t reciver_thread_id;
     pthread_t transmitter_thread_id;
     struct list_t* sem_list;
-    sem_t* sem;
+    struct list_element_t* sem;
     int activate;
 };
 
