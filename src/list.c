@@ -37,6 +37,7 @@ void delete_list(struct list_t* list){
 
     delete_pool(list->memory_pool);
     delete_pool(list->list_pool);
+    free(list);
 
     pthread_mutex_destroy(ptr);
     free(ptr);
@@ -78,7 +79,7 @@ struct list_element_t* list_pop(struct list_t* list){
 
     pthread_mutex_lock(list->lock);
     list->head = element->next;
-    if(element->next->prev)
+    if(element->next)
         element->next->prev = NULL;
     else
         list->tail = NULL;
