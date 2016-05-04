@@ -73,6 +73,9 @@ struct list_element_t* list_pop(struct list_t* list){
     if(list == NULL)
         die("No such list");
 
+    if(list->size <= 0)
+        die("List underflow");
+
     pthread_mutex_lock(list->lock);
     list->head = element->next;
     if(element->next->prev)
