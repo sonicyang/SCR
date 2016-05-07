@@ -2,6 +2,7 @@
 #define __POOL_H__
 
 #include <stdlib.h>
+#include <pthread.h>
 
 struct pool_t{
     void** data;
