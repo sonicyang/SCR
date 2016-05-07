@@ -19,6 +19,7 @@ static void TUI_prompt_welcome(struct TUI_t*);
 
 void TUI_init(struct TUI_t* tui){
     tui->command_chain = create_list(sizeof(struct registered_command_t));
+    tui->default_input_callback = NULL;
 
     initscr();
     cbreak();
@@ -52,6 +53,9 @@ void TUI_process(struct TUI_t* tui){
                 }
                 ptr = ptr->next;
             }
+        }else{
+            if(tui->default_input_callback)
+                 (*(tui->default_input_callback))("123");
         }
 
         wprintw(tui->message_window, input);

@@ -3,14 +3,15 @@
 
 #include <curses.h>
 
+typedef void (*command_handler_t)(void*);
+
 struct TUI_t{
     int run;
     struct list_t* command_chain;
+    command_handler_t default_input_callback;
     WINDOW* message_window;
     WINDOW* command_window;
 };
-
-typedef void (*command_handler_t)(void*);
 
 void TUI_init(struct TUI_t*);
 void TUI_process(struct TUI_t*);
