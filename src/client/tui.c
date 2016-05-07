@@ -10,7 +10,6 @@ struct registered_command_t{
     char command[64];
 };
 
-struct list_t* command_chain;
 
 static WINDOW *create_newwin(int, int, int, int);
 static void destroy_win(WINDOW*);
@@ -19,7 +18,7 @@ static void clear_win(WINDOW*);
 static void TUI_prompt_welcome(struct TUI_t*);
 
 void TUI_init(struct TUI_t* tui){
-    command_chain = create_list(sizeof(struct registered_command_t));
+    tui->command_chain = create_list(sizeof(struct registered_command_t));
 
     initscr();
     cbreak();
@@ -43,8 +42,8 @@ void TUI_process(struct TUI_t* tui){
         wmove(tui->command_window, 1, 1);
         wgetstr(tui->command_window, input);
 
-        if(input[0] == '/' && command_chain->size > 0){
-            ptr = command_chain->head;
+        if(input[0] == '/' && tui->command_chain->size > 0){
+            ptr = tui->command_chain->head;
             while(ptr != NULL){
                 tmp = ((struct registered_command_t*)ptr->data);
 
@@ -72,8 +71,8 @@ void TUI_terminate(struct TUI_t* tui){
     endwin();
 }
 
-void TUI_register_command(char* command, command_handler_t handler, void* argument){
-    struct registered_command_t* tmp = list_allocate(command_chain)->data;
+void TUI_register_command(struct TUI_t* tui, char* command, command_handler_t handler, void* argument){
+    struct registered_command_t* tmp = list_allocate(tui->command_chain)->data;
     strncpy(tmp->command, command, 63);
     tmp->command[63] = '\0';
 
