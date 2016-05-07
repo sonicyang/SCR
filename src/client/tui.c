@@ -49,16 +49,14 @@ void TUI_process(struct TUI_t* tui){
                 tmp = ((struct registered_command_t*)ptr->data);
 
                 if(!strcmp(tmp->command, input + 1)){
-                    (*(tmp->handler))(tmp->argument);
+                    (*(tmp->handler))(tui, tmp->argument);
                 }
                 ptr = ptr->next;
             }
         }else{
             if(tui->default_input_callback)
-                 (*(tui->default_input_callback))("123");
+                 (*(tui->default_input_callback))(tui, input);
         }
-
-        wprintw(tui->message_window, input);
 
         clear_win(tui->command_window);
         wrefresh(tui->message_window);

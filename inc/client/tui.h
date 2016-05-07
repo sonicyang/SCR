@@ -3,7 +3,9 @@
 
 #include <curses.h>
 
-typedef void (*command_handler_t)(void*);
+struct TUI_t;
+
+typedef void (*command_handler_t)(struct TUI_t*, void*);
 
 struct TUI_t{
     int run;
