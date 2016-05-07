@@ -1,13 +1,26 @@
 #include <curses.h>
+#include <string.h>
 
 #include "tui.h"
+#include "list.h"
+
+struct registered_command_t{
+    command_handler_t handler;
+    void* argument;
+    char command[64];
+};
+
+struct list_t* command_chain;
 
 static WINDOW *create_newwin(int, int, int, int);
 static void destroy_win(WINDOW*);
+static void clear_win(WINDOW*);
 
 static void TUI_prompt_welcome(struct TUI_t*);
 
 void TUI_init(struct TUI_t* tui){
+    command_chain = create_list(sizeof(struct registered_command_t));
+
     initscr();
     cbreak();
 
@@ -21,15 +34,52 @@ void TUI_init(struct TUI_t* tui){
 
 void TUI_process(struct TUI_t* tui){
     int ch;
+    char input[128];
+    struct list_element_t* ptr;
+    struct registered_command_t* tmp;
 
-    while((ch = wgetch(tui->command_window)) != KEY_F(1))
-    {
+    tui->run = 1;
+    while(tui->run){
+        wmove(tui->command_window, 1, 1);
+        wgetstr(tui->command_window, input);
 
+        if(input[0] == '/' && command_chain->size > 0){
+            ptr = command_chain->head;
+            while(ptr != NULL){
+                tmp = ((struct registered_command_t*)ptr->data);
+
+                if(!strcmp(tmp->command, input + 1)){
+                    (*(tmp->handler))(tmp->argument);
+                }
+                ptr = ptr->next;
+            }
+        }
+
+        wprintw(tui->message_window, input);
+
+        clear_win(tui->command_window);
+        wrefresh(tui->message_window);
+        wrefresh(tui->command_window);
     }
+}
+
+void TUI_stop(struct TUI_t* tui){
+     tui->run = 0;
+     return;
 }
 
 void TUI_terminate(struct TUI_t* tui){
     endwin();
+}
+
+void TUI_register_command(char* command, command_handler_t handler, void* argument){
+    struct registered_command_t* tmp = list_allocate(command_chain)->data;
+    strncpy(tmp->command, command, 63);
+    tmp->command[63] = '\0';
+
+    tmp->handler = handler;
+    tmp->argument = argument;
+    return;
 }
 
 static void TUI_prompt_welcome(struct TUI_t* tui){
@@ -51,4 +101,10 @@ static void destroy_win(WINDOW *local_win){
     wborder(local_win, ' ', ' ', ' ',' ',' ',' ',' ',' ');
     wrefresh(local_win);
     delwin(local_win);
+}
+
+void clear_win(WINDOW* local_win){
+    wclear(local_win);
+    box(local_win, 0 , 0);
+    wrefresh(local_win);
 }
