@@ -13,7 +13,7 @@ struct TUI_t{
     WINDOW* command_window;
 };
 
-void TUI_init(struct TUI_t*);
+void TUI_init(struct TUI_t*, command_handler_t);
 void TUI_process(struct TUI_t*);
 void TUI_stop(struct TUI_t*);
 void TUI_terminate(struct TUI_t*);
