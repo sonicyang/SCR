@@ -10,6 +10,7 @@ void init_message(struct message_t* message, char* sender, int size){
     strncpy(message->sender, sender, 63);
     message->timestamp = (int)time(NULL);
     message->buffer = malloc(size + 1);
+    memset(message->buffer, 0, size + 1);
     message->size = size;
 
     memset(message->buffer, 0, size + 1);
