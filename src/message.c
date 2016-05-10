@@ -6,7 +6,8 @@
 #include "misc.h"
 
 void init_message(struct message_t* message, char* sender, int size){
-    message->sender = sender;
+    memset(message->sender, 0, sizeof(message->sender));
+    strncpy(message->sender, sender, 63);
     message->timestamp = (int)time(NULL);
     message->buffer = malloc(size + 1);
     message->size = size;
@@ -22,6 +23,8 @@ void destroy_message(struct message_t* message){
 void send_message(struct message_t* message, int* socket){
     int n;
 
+    n = write(*socket, &message->timestamp, sizeof(int));
+    n = write(*socket, message->sender, sizeof(message->sender));
     n = write(*socket, message->buffer, message->size);
     if(n != message->size)
         die("Data lose detected");
@@ -30,6 +33,8 @@ void send_message(struct message_t* message, int* socket){
 void recv_message(struct message_t* message, int* socket){
     int n;
 
+    n = read(*socket , &message->timestamp, sizeof(int));
+    n = read(*socket , message->sender, sizeof(message->sender));
     n = read(*socket , message->buffer, message->size);
     if(n != message->size)
         die("Data lose detected");

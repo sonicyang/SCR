@@ -11,7 +11,7 @@ extern struct list_t* message_list;
 
 struct message_t{
     int timestamp;
-    char* sender;
+    char sender[64];
     char* buffer;
     int size;
 };
