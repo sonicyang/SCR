@@ -21,7 +21,7 @@ static void brocast_message_recv(struct list_t* sems){
 
     ptr = sems->head;
     while(ptr != NULL){
-        sem_post(ptr->data);
+        sem_post(*((sem_t**)(ptr->data)));
         ptr = ptr->next;
     }
 
@@ -37,14 +37,18 @@ void transmitter_clean_up(void* argument){
 
 void client_transmitter(struct client_t* argument){
     struct list_element_t* last_read_message = message_list->head;
+    char sem_name[64];
+
+    sprintf(sem_name, "%d", (int)pthread_self());
 
     argument->sem = list_allocate(argument->sem_list);
-    sem_init(argument->sem->data, 0, 0);
+    sem_unlink(sem_name);
+    *((sem_t**)((struct list_element_t*)argument->sem)->data) = sem_open(sem_name, O_CREAT, O_RDWR, 0);
 
     pthread_cleanup_push(transmitter_clean_up, argument);
 
     while(1){
-        sem_wait(argument->sem->data);
+        sem_wait(*((sem_t**)((struct list_element_t*)argument->sem)->data));
 
         if(message_list->head != NULL){
             if(last_read_message == NULL){

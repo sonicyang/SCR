@@ -96,7 +96,7 @@ void listener(struct setting_t* setting){
     pthread_cleanup_push(listener_free_sems, &client_sems);
 
     clients = create_pool(sizeof(struct client_t));
-    client_sems = create_list(sizeof(sem_t));
+    client_sems = create_list(sizeof(sem_t*));
     message_list = create_list(sizeof(struct message_t));
 
     printf("LISTENER   |  Initialzing...\n");
