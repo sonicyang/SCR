@@ -16,6 +16,7 @@
 static void brocast_message_recv(struct list_t* sems){
     struct list_element_t* ptr;
 
+    //A client disconnected may cause NULL pointer
     pthread_mutex_lock(sems->lock);
 
     ptr = sems->head;
@@ -71,7 +72,6 @@ void client_clean_up(void* argument){
 }
 
 void client_reciver(struct client_t* argument){
-    char name[64];
     struct packet_t packet;
     struct list_element_t* message;
     int run = 1;
@@ -82,15 +82,13 @@ void client_reciver(struct client_t* argument){
 
     pthread_cleanup_push(client_clean_up, argument);
 
-    strcpy(name, inet_ntoa(argument->address.sin_addr));
-
     while(run){
         wait_for_packet(&argument->socket, &packet);
 
         switch(packet.command){
             case MESG:
                 message = list_allocate(message_list);
-                init_message(message->data, name, packet.parameter);
+                init_message(message->data, "", packet.parameter);
                 recv_message(message->data, &argument->socket);
                 brocast_message_recv(argument->sem_list);
 
