@@ -3,13 +3,7 @@
 
 #include "tui.h"
 #include "list.h"
-
-struct registered_command_t{
-    command_handler_t handler;
-    void* argument;
-    char command[64];
-};
-
+#include "misc.h"
 
 static WINDOW *create_newwin(int, int, int, int);
 static void destroy_win(WINDOW*);

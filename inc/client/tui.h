@@ -5,7 +5,13 @@
 
 struct TUI_t;
 
-typedef void (*command_handler_t)(struct TUI_t*, void*);
+typedef void (*command_handler_t)(struct TUI_t*, char*, void*);
+
+struct registered_command_t{
+    command_handler_t handler;
+    void* argument;
+    char command[64];
+};
 
 struct TUI_t{
     int run;
