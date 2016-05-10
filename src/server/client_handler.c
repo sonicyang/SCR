@@ -31,6 +31,11 @@ static void brocast_message_recv(struct list_t* sems){
 
 void transmitter_clean_up(void* argument){
     struct client_t* tmp = (struct client_t*) argument;
+    char sem_name[64];
+
+    sprintf(sem_name, "%d", (int)pthread_self());
+    sem_close(*((sem_t**)((struct list_element_t*)tmp->sem)->data));
+    sem_unlink(sem_name);
     list_delete(tmp->sem_list, tmp->sem);
     list_free(tmp->sem_list, tmp->sem);
 }
