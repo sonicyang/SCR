@@ -17,8 +17,8 @@ void TUI_init(struct TUI_t* tui){
     tui->default_input_callback.handler = NULL;
     tui->line = 1;
 
-    sem_unlink("PRINT_SEM");
-    tui->print = sem_open("PRINT_SEM", O_CREAT, O_RDWR, 0);
+    sem_unlink("APRINT_SEM");
+    tui->print = sem_open("APRINT_SEM", O_CREAT|O_EXCL, S_IRWXU, 0);
 
     initscr();
     cbreak();
@@ -56,7 +56,7 @@ void TUI_process(struct TUI_t* tui){
             while(ptr != NULL){
                 tmp = ((struct registered_command_t*)ptr->data);
 
-                if(!strcmp(tmp->command, input + 1)){
+                if(!strncmp(tmp->command, input + 1, strlen(tmp->command))){
                     (*(tmp->handler))(tui, input + strlen(tmp->command) + 2, tmp->argument);
                 }
                 ptr = ptr->next;
@@ -123,6 +123,7 @@ void TUI_stop(struct TUI_t* tui){
 }
 
 void TUI_terminate(struct TUI_t* tui){
+    sem_close(tui->print);
     sem_unlink("PRINT_SEM");
     delete_list(tui->message_list);
     endwin();
