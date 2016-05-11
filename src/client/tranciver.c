@@ -104,7 +104,7 @@ void client_clean_up(void* argument){
     pthread_cancel(tmp->transmitter_thread_id);
     pthread_join(tmp->transmitter_thread_id, NULL);
     send_packet(&tmp->socket, TERM, 0);
-    close(tmp->socket);
+    shutdown(tmp->socket, SHUT_WR);
 }
 
 void client_reciver(struct client_tranciver_t* argument){
@@ -121,7 +121,7 @@ void client_reciver(struct client_tranciver_t* argument){
 
     if(pthread_create(&argument->transmitter_thread_id, NULL, (void*)client_transmitter, (void*)argument)){
         TUI_error(argument->tui, "Failed on creating transmitter thread");
-        close(argument->socket);
+        shutdown(argument->socket, SHUT_WR);
         return;
     }
 

@@ -28,6 +28,8 @@ int main(int argc, char *argv[]){
     struct TUI_t tui;
     struct client_tranciver_t tranciver;
 
+    strcpy(tranciver.name, "CLIENT");
+
     if (signal(SIGINT, signal_handler) == SIG_ERR)
         die("Cannot handle SIGINT");
 

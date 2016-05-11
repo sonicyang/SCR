@@ -54,7 +54,7 @@ static void listener_free_clients(void* argument){
         if(pool->used_mark[i] == 1 && clients[i]->activate == 1){
             pthread_cancel(clients[i]->reciver_thread_id);
             pthread_join(clients[i]->reciver_thread_id, NULL);
-            close(clients[i]->socket);
+            shutdown(clients[i]->socket, SHUT_WR);
         }
     }
 
@@ -128,7 +128,7 @@ void listener(struct setting_t* setting){
         for(i = 0; i < clients->size; i++){
             if(((struct client_t*)(clients->data[i]))->activate == -1){
                 pthread_join(client->reciver_thread_id, NULL);
-                close(((struct client_t*)(clients->data[i]))->socket);
+                shutdown(((struct client_t*)(clients->data[i]))->socket, SHUT_WR);
                 pool_free(clients, clients->data[i]);
                 client->activate = 0;
             }
