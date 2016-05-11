@@ -160,13 +160,20 @@ static void TUI_prompt_welcome(struct TUI_t* tui){
 static void TUI_refresh(struct TUI_t* tui){
     struct list_element_t* ptr;
     int i;
+    char now[32];
+    struct tm tim;
 
     clear_win(tui->message_window);
 
     i = 1;
     ptr = tui->print_start;
     while(ptr != NULL){
-        mvwprintw(tui->message_window, i, 1, ((struct message_t*)ptr->data)->buffer);
+        wmove(tui->message_window, i, 1);
+        localtime_r((time_t*)&((struct message_t*)ptr->data)->timestamp, &tim);
+        strftime(now, 30, "%X", &tim);
+        wprintw(tui->message_window, now);
+        wprintw(tui->message_window, ((struct message_t*)ptr->data)->sender);
+        wprintw(tui->message_window, ((struct message_t*)ptr->data)->buffer);
         i++;
         ptr = ptr->next;
     }
