@@ -44,11 +44,9 @@ void TUI_init(struct TUI_t* tui){
 }
 
 void TUI_process(struct TUI_t* tui){
-    int ch;
     int i;
     int input_buffer;
     char input[INPUT_BUFFER_SIZE + 1];
-    char* unptr;
 
     wmove(tui->command_window, 1, 1);
     tui->run = 1;
