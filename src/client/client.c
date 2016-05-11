@@ -13,15 +13,23 @@
 #include "misc.h"
 #include "tranciver.h"
 
+
 void clear_message(struct TUI_t* tui, char* input, void* argument){
     tui->line = 1;
     clear_win(tui->message_window);
 
 }
 
+void signal_handler(int signal_number)
+{
+}
+
 int main(int argc, char *argv[]){
     struct TUI_t tui;
     struct client_tranciver_t tranciver;
+
+    if (signal(SIGINT, signal_handler) == SIG_ERR)
+        die("Cannot handle SIGINT");
 
     tranciver.run = 0;
 
