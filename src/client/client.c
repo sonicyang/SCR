@@ -17,8 +17,13 @@
 void clear_message(struct TUI_t* tui, char* input, void* argument){
     tui->line = 1;
     clear_win(tui->message_window);
-
 }
+
+void set_name(struct TUI_t* tui, char* input, void* argument){
+    struct client_tranciver_t* tmp = (struct client_tranciver_t*)argument;
+    strncpy(tmp->name, input, MAX_NAME);
+}
+
 
 void signal_handler(int signal_number)
 {
@@ -40,6 +45,7 @@ int main(int argc, char *argv[]){
     TUI_register_command(&tui, "stop", (command_handler_t)&TUI_stop, &tui);
     TUI_register_command(&tui, "clear", &clear_message, &tui);
     TUI_register_command(&tui, "connect", &connect_server, &tranciver);
+    TUI_register_command(&tui, "name", &set_name, &tranciver);
     TUI_process(&tui);
     TUI_terminate(&tui);
 
