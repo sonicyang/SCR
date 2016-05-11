@@ -112,6 +112,7 @@ void TUI_error(struct TUI_t* tui, char* str){
         init_message(&message, "ERROR", strlen(strerror(errno)));
         strcpy(message.buffer, strerror(errno));
         TUI_write_message(tui, &message);
+        errno = 0;
     }
 
     return;
