@@ -86,7 +86,8 @@ void client_reciver(struct client_t* argument){
     int run = 1;
 
     if(pthread_create(&argument->transmitter_thread_id, NULL, (void*)client_transmitter, (void*)argument)){
-        die("Failed on creating Client Transmitter thread");
+        print_err("Failed on creating Client Transmitter thread");
+        return;
     }
 
     pthread_cleanup_push(client_clean_up, argument);
@@ -110,7 +111,7 @@ void client_reciver(struct client_t* argument){
                 break;
             default:
                 printf("%d %d", packet.command, TERM);
-                die("Ambiguous command");
+                print_err("Ambiguous command");
         }
     }
 
@@ -120,7 +121,8 @@ void client_reciver(struct client_t* argument){
 
 int start_client_handler(struct client_t* arg){
     if(pthread_create(&(arg->reciver_thread_id), NULL, (void*)client_reciver, (void*)arg)){
-        die("Failed on creating Client Reciver thread");
+        print_err("Failed on creating Client Reciver thread");
+        return 1;
     }
     return 0;
 }

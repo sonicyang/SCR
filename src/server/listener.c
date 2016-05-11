@@ -19,23 +19,23 @@ struct client_list_t{
 
 struct list_t* message_list;
 
-static struct client_t* wait_for_client(int* listener_sock, struct client_t* client){
+static int wait_for_client(int* listener_sock, struct client_t* client){
     client->length = sizeof(client->address);
     client->socket = accept(*listener_sock, (struct sockaddr*)&(client->address), &(client->length));
     client->activate = 1;
 
     if(client->socket < 0){
-        die("Failed to accept connection");
+        print_err("Failed to accept connection");
+        return 1;
     }
 
-    start_client_handler(client);
-
-    return client;
+    return start_client_handler(client);
 }
 
 int start_listener(struct setting_t* setting, pthread_t* listener_id){
     if(pthread_create(listener_id, NULL, (void*)listener, (void*)setting)){
-        die("Failed on creating Listener thread");
+        print_err("Failed on creating Listener thread");
+        return 1;
     }
     return 0;
 }
@@ -105,24 +105,34 @@ void listener(struct setting_t* setting){
     listener_sock = socket(AF_INET, SOCK_STREAM, 0);
     printf("LISTENER   |  Socket Opened\n");
 
-    if(listener_sock < 0)
-        die("Failed on opening listener socket");
+    if(listener_sock < 0){
+        print_err("Failed on opening listener socket");
+        close(listener_sock);
+        return;
+    }
 
     load_setting(setting, &address);
 
-    if(bind(listener_sock, (struct sockaddr *) &address, sizeof(struct sockaddr_in)) < 0)
-        die("Server Unable to bind Address");
+    if(bind(listener_sock, (struct sockaddr *) &address, sizeof(struct sockaddr_in)) < 0){
+        print_err("Server Unable to bind Address");
+        close(listener_sock);
+        return;
+    }
 
     printf("LISTENER   |  Listening...\n");
-    if(listen(listener_sock, setting->max_user))
-        die("Cannot listen on the socket");
+    if(listen(listener_sock, setting->max_user)){
+        print_err("Cannot listen on the socket");
+        close(listener_sock);
+        return;
+    }
 
     while(1){
         client = pool_allocate(clients);
         client->activate = 0;
         client->sem_list = client_sems;
-        wait_for_client(&listener_sock, client);
-        connected_user++;
+        if(wait_for_client(&listener_sock, client)){
+            connected_user++;
+        }
 
         /*XXX: Pass Information between threads are more propreiate*/
         for(i = 0; i < clients->size; i++){
