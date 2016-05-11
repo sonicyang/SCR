@@ -13,7 +13,6 @@
 #include "misc.h"
 #include "tranciver.h"
 
-
 void clear_message(struct TUI_t* tui, char* input, void* argument){
     tui->line = 1;
     clear_win(tui->message_window);

@@ -7,10 +7,15 @@
 #include "list.h"
 #include "misc.h"
 
+#define INPUT_BUFFER_SIZE 128
+
 static WINDOW *create_newwin(int, int, int, int);
 static void destroy_win(WINDOW*);
 
 static void TUI_prompt_welcome(struct TUI_t*);
+static void TUI_parse_command(struct TUI_t*, char*);
+static void TUI_refresh(struct TUI_t*);
+void clear_win(WINDOW* local_win);
 
 void TUI_init(struct TUI_t* tui){
     tui->command_chain = create_list(sizeof(struct registered_command_t));
@@ -22,12 +27,13 @@ void TUI_init(struct TUI_t* tui){
 
     initscr();
     cbreak();
+    noecho();
 
     tui->message_window = create_newwin(LINES - 3, COLS, 0, 0);
     tui->command_window = create_newwin(3, COLS, LINES - 3, 0);
 
-    wtimeout(tui->command_window, 1000);
-    /*keypad(tui->command_window, TRUE);*/
+    wtimeout(tui->command_window, 30);
+    keypad(tui->command_window, TRUE);
 
     tui->message_list = create_list(sizeof(struct message_t));
     //Dummy Head
@@ -39,33 +45,46 @@ void TUI_init(struct TUI_t* tui){
 
 void TUI_process(struct TUI_t* tui){
     int ch;
-    char input[128];
-    struct list_element_t* ptr;
-    struct registered_command_t* tmp;
+    int i;
+    int input_buffer;
+    char input[INPUT_BUFFER_SIZE + 1];
+    char* unptr;
 
     wmove(tui->command_window, 1, 1);
     tui->run = 1;
+    i = 0;
     while(tui->run){
-        if(wgetnstr(tui->command_window, input, 127) != ERR){
-            if(input[0] == '/' && tui->command_chain->size > 0){
-                ptr = tui->command_chain->head;
-                while(ptr != NULL){
-                    tmp = ((struct registered_command_t*)ptr->data);
-
-                    if(!strncmp(tmp->command, input + 1, strlen(tmp->command))){
-                        (*(tmp->handler))(tui, input + strlen(tmp->command) + 2, tmp->argument);
-                    }
-                    ptr = ptr->next;
+        input_buffer = wgetch(tui->command_window);
+        switch(input_buffer){
+            case ERR:
+                break;
+            case KEY_BACKSPACE:
+            case KEY_DC:
+            case 127:
+                if(i > 0){
+                    wmove(tui->command_window, 1, i);
+                    waddch(tui->command_window, ' ');
+                    wmove(tui->command_window, 1, i);
+                    i--;
                 }
-            }else{
-                if(tui->default_input_callback.handler)
-                     (*(tui->default_input_callback.handler))(tui, input, tui->default_input_callback.argument);
-            }
-
-            clear_win(tui->command_window);
-            wrefresh(tui->command_window);
-            wmove(tui->command_window, 1, 1);
-        }else{
+                break;
+            case KEY_ENTER:
+            case '\n':
+                if(i){
+                    clear_win(tui->command_window);
+                    wmove(tui->command_window, 1, 1);
+                    input[i] = '\0';
+                    i = 0;
+                    TUI_parse_command(tui, input);
+                }
+                break;
+            case 32 ... 126:
+                if(i < INPUT_BUFFER_SIZE){
+                    waddch(tui->command_window, input_buffer);
+                    input[i] = 0x000000ff & input_buffer;
+                    i++;
+                }
+                break;
 
         }
 
@@ -73,23 +92,6 @@ void TUI_process(struct TUI_t* tui){
             TUI_refresh(tui);
         }
     }
-}
-
-void TUI_refresh(struct TUI_t* tui){
-    struct list_element_t* ptr;
-    int i;
-
-    clear_win(tui->message_window);
-
-    i = 1;
-    ptr = tui->print_start;
-    while(ptr != NULL){
-        mvwprintw(tui->message_window, i, 1, ((struct message_t*)ptr->data)->buffer);
-        i++;
-        ptr = ptr->next;
-    }
-
-    wrefresh(tui->message_window);
 }
 
 void TUI_write_message(struct TUI_t* tui, struct message_t* message_in){
@@ -140,9 +142,53 @@ void TUI_register_command(struct TUI_t* tui, char* command, command_handler_t ha
     return;
 }
 
+void clear_win(WINDOW* local_win){
+    wclear(local_win);
+    box(local_win, 0 , 0);
+    wrefresh(local_win);
+}
+
 static void TUI_prompt_welcome(struct TUI_t* tui){
     mvwprintw(tui->message_window, 1, 1, "Press F1 to exit");
     wrefresh(tui->message_window);
+}
+
+static void TUI_refresh(struct TUI_t* tui){
+    struct list_element_t* ptr;
+    int i;
+
+    clear_win(tui->message_window);
+
+    i = 1;
+    ptr = tui->print_start;
+    while(ptr != NULL){
+        mvwprintw(tui->message_window, i, 1, ((struct message_t*)ptr->data)->buffer);
+        i++;
+        ptr = ptr->next;
+    }
+
+    wrefresh(tui->message_window);
+}
+
+static void TUI_parse_command(struct TUI_t* tui, char* input){
+    struct list_element_t* ptr;
+    struct registered_command_t* tmp;
+
+    if(input[0] == '/' && tui->command_chain->size > 0){
+        ptr = tui->command_chain->head;
+        while(ptr != NULL){
+            tmp = ((struct registered_command_t*)ptr->data);
+
+            if(!strncmp(tmp->command, input + 1, strlen(tmp->command))){
+                (*(tmp->handler))(tui, input + strlen(tmp->command) + 2, tmp->argument);
+            }
+            ptr = ptr->next;
+        }
+    }else{
+        if(tui->default_input_callback.handler)
+             (*(tui->default_input_callback.handler))(tui, input, tui->default_input_callback.argument);
+    }
+    return;
 }
 
 static WINDOW *create_newwin(int height, int width, int starty, int startx){
@@ -161,8 +207,3 @@ static void destroy_win(WINDOW *local_win){
     delwin(local_win);
 }
 
-void clear_win(WINDOW* local_win){
-    wclear(local_win);
-    box(local_win, 0 , 0);
-    wrefresh(local_win);
-}
