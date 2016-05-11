@@ -93,9 +93,13 @@ void TUI_process(struct TUI_t* tui){
 }
 
 void TUI_write_message(struct TUI_t* tui, struct message_t* message_in){
-    struct list_element_t* message = list_allocate(tui->message_list);
-    memcpy(message->data, message_in, sizeof(struct message_t));
-    sem_post(tui->print);
+    struct list_element_t* message;
+    if(tui->run){
+        message = list_allocate(tui->message_list);
+        memcpy(message->data, message_in, sizeof(struct message_t));
+        sem_post(tui->print);
+    }
+    return;
 }
 
 void TUI_error(struct TUI_t* tui, char* str){
