@@ -8,6 +8,7 @@
 #include "tui.h"
 
 struct client_tranciver_t{
+    int run;
     struct sockaddr_in server_address;
     int socket;
     pthread_t transmitter_thread_id;

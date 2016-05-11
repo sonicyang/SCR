@@ -23,6 +23,7 @@ int main(int argc, char *argv[]){
     struct TUI_t tui;
     struct client_tranciver_t tranciver;
 
+    tranciver.run = 0;
 
     TUI_init(&tui);
     TUI_register_command(&tui, "", (command_handler_t)&input_handler, &tranciver);
@@ -31,6 +32,11 @@ int main(int argc, char *argv[]){
     TUI_register_command(&tui, "connect", &connect_server, &tranciver);
     TUI_process(&tui);
     TUI_terminate(&tui);
+
+    if(tranciver.run){
+         pthread_cancel(tranciver.reciver_thread_id);
+         pthread_join(tranciver.reciver_thread_id, NULL);
+    }
 
     return 0;
 }

@@ -1,4 +1,7 @@
 #include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -14,10 +17,6 @@ void connect_server(struct TUI_t* tui, char* input, void* argument){
     struct client_tranciver_t* tmp = (struct client_tranciver_t*)argument;
     struct hostent *server;
 
-    //XXX: should print error message on screen and continue, remove die()
-
-    tmp->socket = socket(AF_INET, SOCK_STREAM, 0);
-
     server = gethostbyname(input);
     if (server == NULL) {
         die("No such host");
@@ -27,10 +26,6 @@ void connect_server(struct TUI_t* tui, char* input, void* argument){
     memcpy(&tmp->server_address.sin_addr.s_addr, server->h_addr_list[0], server->h_length);
     //XXX: Hard Coded Port number
     tmp->server_address.sin_port = htons(8787);
-
-    if(connect(tmp->socket, (struct sockaddr*)&tmp->server_address, sizeof(struct sockaddr_in)) < 0){
-        die("ERROR connecting");
-    }
 
     tmp->tui = tui;
 
@@ -103,12 +98,21 @@ void client_clean_up(void* argument){
     struct client_tranciver_t* tmp = (struct client_tranciver_t*) argument;
     pthread_cancel(tmp->transmitter_thread_id);
     pthread_join(tmp->transmitter_thread_id, NULL);
+    send_packet(&tmp->socket, TERM, 0);
+    close(tmp->socket);
 }
 
 void client_reciver(struct client_tranciver_t* argument){
     struct packet_t packet;
     struct message_t message;
     int run = 1;
+
+    //XXX: should print error message on screen and continue, remove die()
+    argument->socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    if(connect(argument->socket, (struct sockaddr*)&argument->server_address, sizeof(struct sockaddr_in)) < 0){
+        die("ERROR connecting");
+    }
 
     if(pthread_create(&argument->transmitter_thread_id, NULL, (void*)client_transmitter, (void*)argument)){
         die("Failed on creating transmitter thread");
@@ -145,6 +149,8 @@ void start_tranciver(struct client_tranciver_t* arg){
     if(pthread_create(&(arg->reciver_thread_id), NULL, (void*)client_reciver, (void*)arg)){
         die("Failed on creating Client Reciver thread");
     }
+
+    arg->run = 1;
     return;
 }
 
