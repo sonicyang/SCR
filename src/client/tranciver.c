@@ -73,6 +73,7 @@ void client_transmitter(struct client_tranciver_t* argument){
             send_packet(&argument->socket, MESG, (((struct message_t*)(ptr1->data))->size));
             send_message(((struct message_t*)(ptr1->data)), &argument->socket);
              ptr2 = ptr1;
+            list_delete(argument->message_to_send, ptr2);
             list_free(argument->message_to_send, ptr2);
              ptr1 = ptr1->next;
         }
@@ -103,6 +104,7 @@ void client_reciver(struct client_tranciver_t* argument){
 
         switch(packet.command){
             case MESG:
+                init_message(&message, "", packet.parameter);
                 recv_message(&message, &argument->socket);
 
                 TUI_write_message(argument->tui, &message);
