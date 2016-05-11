@@ -38,16 +38,15 @@ void TUI_init(struct TUI_t* tui){
 }
 
 void TUI_process(struct TUI_t* tui){
-    int ch, i;
+    int ch;
     char input[128];
     struct list_element_t* ptr;
     struct registered_command_t* tmp;
 
-    wmove(tui->command_window, 1, 1);
     tui->run = 1;
-    i = 0;
     while(tui->run){
-        if(wgetch(tui->command_window) == OK){
+        wmove(tui->command_window, 1, 1);
+        if(wgetstr(tui->command_window, input) == OK){
             if(input[0] == '/' && tui->command_chain->size > 0){
                 ptr = tui->command_chain->head;
                 while(ptr != NULL){
@@ -65,7 +64,6 @@ void TUI_process(struct TUI_t* tui){
 
             clear_win(tui->command_window);
             wrefresh(tui->command_window);
-            wmove(tui->command_window, 1, 1);
         }else if(!sem_trywait(tui->print)){
             TUI_refresher(tui);
         }
