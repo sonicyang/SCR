@@ -25,7 +25,6 @@ struct TUI_t{
     struct list_t* message_list;
     struct list_element_t* print_start;
     sem_t* print;
-    pthread_t print_thread_id;
     WINDOW* message_window;
     WINDOW* command_window;
 };

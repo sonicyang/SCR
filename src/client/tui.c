@@ -26,48 +26,49 @@ void TUI_init(struct TUI_t* tui){
     tui->message_window = create_newwin(LINES - 3, COLS, 0, 0);
     tui->command_window = create_newwin(3, COLS, LINES - 3, 0);
 
-    keypad(tui->command_window, TRUE);
+    wtimeout(tui->command_window, 30);
+    /*keypad(tui->command_window, TRUE);*/
 
     tui->message_list = create_list(sizeof(struct message_t));
     //Dummy Head
     tui->print_start = list_allocate(tui->message_list);
     init_message(tui->print_start->data, "", 0);
 
-    if(pthread_create(&(tui->print_thread_id), NULL, (void*)TUI_refresher, (void*)tui)){
-         die("Error on creating Refresher");
-    }
-
     TUI_prompt_welcome(tui);
 }
 
 void TUI_process(struct TUI_t* tui){
-    int ch;
+    int ch, i;
     char input[128];
     struct list_element_t* ptr;
     struct registered_command_t* tmp;
 
+    wmove(tui->command_window, 1, 1);
     tui->run = 1;
+    i = 0;
     while(tui->run){
-        wmove(tui->command_window, 1, 1);
-        wgetstr(tui->command_window, input);
+        if(wgetch(tui->command_window) == OK){
+            if(input[0] == '/' && tui->command_chain->size > 0){
+                ptr = tui->command_chain->head;
+                while(ptr != NULL){
+                    tmp = ((struct registered_command_t*)ptr->data);
 
-        if(input[0] == '/' && tui->command_chain->size > 0){
-            ptr = tui->command_chain->head;
-            while(ptr != NULL){
-                tmp = ((struct registered_command_t*)ptr->data);
-
-                if(!strncmp(tmp->command, input + 1, strlen(tmp->command))){
-                    (*(tmp->handler))(tui, input + strlen(tmp->command) + 2, tmp->argument);
+                    if(!strncmp(tmp->command, input + 1, strlen(tmp->command))){
+                        (*(tmp->handler))(tui, input + strlen(tmp->command) + 2, tmp->argument);
+                    }
+                    ptr = ptr->next;
                 }
-                ptr = ptr->next;
+            }else{
+                if(tui->default_input_callback.handler)
+                     (*(tui->default_input_callback.handler))(tui, input, tui->default_input_callback.argument);
             }
-        }else{
-            if(tui->default_input_callback.handler)
-                 (*(tui->default_input_callback.handler))(tui, input, tui->default_input_callback.argument);
-        }
 
-        clear_win(tui->command_window);
-        wrefresh(tui->command_window);
+            clear_win(tui->command_window);
+            wrefresh(tui->command_window);
+            wmove(tui->command_window, 1, 1);
+        }else if(!sem_trywait(tui->print)){
+            TUI_refresher(tui);
+        }
     }
 }
 
@@ -75,20 +76,17 @@ void TUI_refresher(struct TUI_t* tui){
     struct list_element_t* ptr;
     int i;
 
-    while(tui->run){
-        sem_wait(tui->print);
-        clear_win(tui->message_window);
+    clear_win(tui->message_window);
 
-        i = 1;
-        ptr = tui->print_start;
-        while(ptr != NULL){
-            mvwprintw(tui->message_window, i, 1, ((struct message_t*)ptr->data)->buffer);
-            i++;
-            ptr = ptr->next;
-        }
-
-        wrefresh(tui->message_window);
+    i = 1;
+    ptr = tui->print_start;
+    while(ptr != NULL){
+        mvwprintw(tui->message_window, i, 1, ((struct message_t*)ptr->data)->buffer);
+        i++;
+        ptr = ptr->next;
     }
+
+    wrefresh(tui->message_window);
 }
 
 void TUI_write_message(struct TUI_t* tui, struct message_t* message_in){
@@ -118,7 +116,6 @@ void TUI_error(struct TUI_t* tui, char* str){
 
 void TUI_stop(struct TUI_t* tui){
      tui->run = 0;
-     pthread_join(tui->print_thread_id, NULL);
      return;
 }
 
