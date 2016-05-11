@@ -149,7 +149,8 @@ void clear_win(WINDOW* local_win){
 }
 
 static void TUI_prompt_welcome(struct TUI_t* tui){
-    mvwprintw(tui->message_window, 1, 1, "Press F1 to exit");
+    mvwprintw(tui->message_window, 1, 1, "Type: /stop to exit");
+    mvwprintw(tui->message_window, 1, 1, "Type: /connect SERVER_IP to connect to a server");
     wrefresh(tui->message_window);
 }
 
