@@ -39,10 +39,18 @@ void connect_server(struct TUI_t* tui, char* input, void* argument){
     return;
 }
 
+void stop_server(struct TUI_t* tui, void* argument){
+
+}
+
 void input_handler(struct TUI_t* tui, char* input, void* argument){
     struct client_tranciver_t* tmp = (struct client_tranciver_t*) argument;
-    if(tmp->message_to_send){
-        struct message_t* message = list_allocate(tmp->message_to_send)->data;
+    struct message_t* message;
+    int* command;
+    if(tmp->packet_to_send && tmp->message_to_send){
+        command = list_allocate(tmp->packet_to_send)->data;
+        message = list_allocate(tmp->message_to_send)->data;
+        *command = MESG;
         init_message(message, tmp->name, strlen(input));
         strcpy(message->buffer, input);
         sem_post(tmp->sent);
@@ -52,6 +60,7 @@ void input_handler(struct TUI_t* tui, char* input, void* argument){
 void transmitter_clean_up(void* argument){
     struct client_tranciver_t* tmp = (struct client_tranciver_t*) argument;
     delete_list(tmp->message_to_send);
+    delete_list(tmp->packet_to_send);
     sem_close(tmp->sent);
     sem_unlink("TRANS_SEMB");
 }
@@ -59,8 +68,10 @@ void transmitter_clean_up(void* argument){
 void client_transmitter(struct client_tranciver_t* argument){
     struct list_element_t* ptr1;
     struct list_element_t* ptr2;
+    struct list_element_t* ptrm;
 
     argument->message_to_send = create_list(sizeof(struct message_t));
+    argument->packet_to_send = create_list(sizeof(struct packet_t));
     sem_unlink("TRANS_SEMB");
     argument->sent = sem_open("TRANS_SEMB", O_CREAT, S_IRWXU, 0);
     pthread_cleanup_push(transmitter_clean_up, argument);
@@ -68,13 +79,19 @@ void client_transmitter(struct client_tranciver_t* argument){
     while(1){
         sem_wait(argument->sent);
 
-        ptr1 = argument->message_to_send->head;
+        ptr1 = argument->packet_to_send->head;
         while(ptr1 != NULL){
-            send_packet(&argument->socket, MESG, (((struct message_t*)(ptr1->data))->size));
-            send_message(((struct message_t*)(ptr1->data)), &argument->socket);
+            switch(*(int*)(ptr1->data)){
+                case MESG:
+                    ptrm = list_pop(argument->message_to_send);
+                    send_packet(&argument->socket, MESG, (((struct message_t*)(ptrm->data))->size));
+                    send_message(((struct message_t*)(ptrm->data)), &argument->socket);
+                    list_free(argument->message_to_send, ptrm);
+                    break;
+            }
              ptr2 = ptr1;
-            list_delete(argument->message_to_send, ptr2);
-            list_free(argument->message_to_send, ptr2);
+            list_delete(argument->packet_to_send, ptr2);
+            list_free(argument->packet_to_send, ptr2);
              ptr1 = ptr1->next;
         }
     }

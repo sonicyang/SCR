@@ -12,6 +12,7 @@ struct client_tranciver_t{
     int socket;
     pthread_t transmitter_thread_id;
     pthread_t reciver_thread_id;
+    struct list_t* packet_to_send;
     struct list_t* message_to_send;
     struct TUI_t* tui;
     char name[64];
