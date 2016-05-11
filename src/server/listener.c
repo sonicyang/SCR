@@ -107,7 +107,6 @@ void listener(struct setting_t* setting){
 
     if(listener_sock < 0){
         print_err("Failed on opening listener socket");
-        close(listener_sock);
         return;
     }
 
@@ -115,7 +114,6 @@ void listener(struct setting_t* setting){
 
     if(bind(listener_sock, (struct sockaddr *) &address, sizeof(struct sockaddr_in)) < 0){
         print_err("Server Unable to bind Address");
-        close(listener_sock);
         return;
     }
 
