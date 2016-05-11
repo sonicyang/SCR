@@ -31,7 +31,7 @@ struct TUI_t{
 
 void TUI_init(struct TUI_t*);
 void TUI_process(struct TUI_t*);
-void TUI_refresher(struct TUI_t*);
+void TUI_refresh(struct TUI_t*);
 void TUI_stop(struct TUI_t*);
 void TUI_terminate(struct TUI_t*);
 void TUI_write_message(struct TUI_t*, struct message_t*);

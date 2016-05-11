@@ -26,7 +26,7 @@ void TUI_init(struct TUI_t* tui){
     tui->message_window = create_newwin(LINES - 3, COLS, 0, 0);
     tui->command_window = create_newwin(3, COLS, LINES - 3, 0);
 
-    wtimeout(tui->command_window, 30);
+    wtimeout(tui->command_window, 1000);
     /*keypad(tui->command_window, TRUE);*/
 
     tui->message_list = create_list(sizeof(struct message_t));
@@ -43,10 +43,10 @@ void TUI_process(struct TUI_t* tui){
     struct list_element_t* ptr;
     struct registered_command_t* tmp;
 
+    wmove(tui->command_window, 1, 1);
     tui->run = 1;
     while(tui->run){
-        wmove(tui->command_window, 1, 1);
-        if(wgetstr(tui->command_window, input) == OK){
+        if(wgetnstr(tui->command_window, input, 127) != ERR){
             if(input[0] == '/' && tui->command_chain->size > 0){
                 ptr = tui->command_chain->head;
                 while(ptr != NULL){
@@ -64,13 +64,18 @@ void TUI_process(struct TUI_t* tui){
 
             clear_win(tui->command_window);
             wrefresh(tui->command_window);
-        }else if(!sem_trywait(tui->print)){
-            TUI_refresher(tui);
+            wmove(tui->command_window, 1, 1);
+        }else{
+
+        }
+
+        if(!sem_trywait(tui->print)){
+            TUI_refresh(tui);
         }
     }
 }
 
-void TUI_refresher(struct TUI_t* tui){
+void TUI_refresh(struct TUI_t* tui){
     struct list_element_t* ptr;
     int i;
 
@@ -90,10 +95,6 @@ void TUI_refresher(struct TUI_t* tui){
 void TUI_write_message(struct TUI_t* tui, struct message_t* message_in){
     struct list_element_t* message = list_allocate(tui->message_list);
     memcpy(message->data, message_in, sizeof(struct message_t));
-
-    if(tui->message_list->size > LINES - 3 - 2)
-        tui->print_start = tui->print_start->next;
-
     sem_post(tui->print);
 }
 
