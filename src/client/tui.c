@@ -168,12 +168,11 @@ static void TUI_refresh(struct TUI_t* tui){
     i = 1;
     ptr = tui->print_start;
     while(ptr != NULL){
-        wmove(tui->message_window, i, 1);
         localtime_r((time_t*)&((struct message_t*)ptr->data)->timestamp, &tim);
         strftime(now, 30, "%X", &tim);
-        wprintw(tui->message_window, now);
-        wprintw(tui->message_window, ((struct message_t*)ptr->data)->sender);
-        wprintw(tui->message_window, ((struct message_t*)ptr->data)->buffer);
+        mvwprintw(tui->message_window, i, 1, now);
+        mvwprintw(tui->message_window, i, 12, ((struct message_t*)ptr->data)->sender);
+        mvwprintw(tui->message_window, i, 30, ((struct message_t*)ptr->data)->buffer);
         i++;
         ptr = ptr->next;
     }
