@@ -13,15 +13,18 @@
 #include "packet.h"
 #include "message.h"
 
-static void start_tranciver(struct client_tranciver_t*);
+static int start_tranciver(struct client_tranciver_t*);
 
 void connect_server(struct TUI_t* tui, char* input, void* argument){
     struct client_tranciver_t* tmp = (struct client_tranciver_t*)argument;
     struct hostent *server;
+    char nsh[129] = "No Such Host: ";
 
     server = gethostbyname(input);
     if (server == NULL) {
-        die("No such host");
+        strncat(nsh, input, 128 - 14);
+        TUI_error(tui, nsh);
+        return;
     }
     memset((char *) &tmp->server_address, 0, sizeof(struct sockaddr_in));
     tmp->server_address.sin_family = AF_INET;
@@ -148,12 +151,13 @@ void client_reciver(struct client_tranciver_t* argument){
     return;
 }
 
-static void start_tranciver(struct client_tranciver_t* arg){
+static int start_tranciver(struct client_tranciver_t* arg){
     if(pthread_create(&(arg->reciver_thread_id), NULL, (void*)client_reciver, (void*)arg)){
         TUI_error(arg->tui, "Failed on creating Client Reciver thread");
+        return 1;
     }
 
     arg->run = 1;
-    return;
+    return 0;
 }
 
