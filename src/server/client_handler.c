@@ -48,7 +48,7 @@ void client_transmitter(struct client_t* argument){
 
     argument->sem = list_allocate(argument->sem_list);
     sem_unlink(sem_name);
-    *((sem_t**)((struct list_element_t*)argument->sem)->data) = sem_open(sem_name, O_CREAT, O_RDWR, 0);
+    *((sem_t**)((struct list_element_t*)argument->sem)->data) = sem_open(sem_name, O_CREAT, S_IRWXU, 0);
 
     pthread_cleanup_push(transmitter_clean_up, argument);
 
