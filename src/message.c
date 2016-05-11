@@ -5,9 +5,10 @@
 #include "message.h"
 #include "misc.h"
 
+
 void init_message(struct message_t* message, char* sender, int size){
     memset(message->sender, 0, sizeof(message->sender));
-    strncpy(message->sender, sender, 63);
+    strncpy(message->sender, sender, MAX_NAME);
     message->timestamp = (int)time(NULL);
     message->buffer = malloc(size + 1);
     memset(message->buffer, 0, size + 1);

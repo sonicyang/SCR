@@ -7,11 +7,13 @@
 #include "list.h"
 #include "setting.h"
 
+#define MAX_NAME 15
+
 extern struct list_t* message_list;
 
 struct message_t{
     int timestamp;
-    char sender[64];
+    char sender[MAX_NAME + 1];
     char* buffer;
     int size;
 };
