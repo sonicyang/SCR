@@ -13,6 +13,8 @@
 #include "packet.h"
 #include "message.h"
 
+static void start_tranciver(struct client_tranciver_t*);
+
 void connect_server(struct TUI_t* tui, char* input, void* argument){
     struct client_tranciver_t* tmp = (struct client_tranciver_t*)argument;
     struct hostent *server;
@@ -107,15 +109,17 @@ void client_reciver(struct client_tranciver_t* argument){
     struct message_t message;
     int run = 1;
 
-    //XXX: should print error message on screen and continue, remove die()
     argument->socket = socket(AF_INET, SOCK_STREAM, 0);
 
     if(connect(argument->socket, (struct sockaddr*)&argument->server_address, sizeof(struct sockaddr_in)) < 0){
-        die("ERROR connecting");
+        TUI_error(argument->tui, "ERROR connecting");
+        return;
     }
 
     if(pthread_create(&argument->transmitter_thread_id, NULL, (void*)client_transmitter, (void*)argument)){
-        die("Failed on creating transmitter thread");
+        TUI_error(argument->tui, "Failed on creating transmitter thread");
+        close(argument->socket);
+        return;
     }
 
     pthread_cleanup_push(client_clean_up, argument);
@@ -136,8 +140,7 @@ void client_reciver(struct client_tranciver_t* argument){
                 run = 0;
                 break;
             default:
-                printf("%d %d", packet.command, TERM);
-                die("Ambiguous command");
+                break;
         }
     }
 
@@ -145,9 +148,9 @@ void client_reciver(struct client_tranciver_t* argument){
     return;
 }
 
-void start_tranciver(struct client_tranciver_t* arg){
+static void start_tranciver(struct client_tranciver_t* arg){
     if(pthread_create(&(arg->reciver_thread_id), NULL, (void*)client_reciver, (void*)arg)){
-        die("Failed on creating Client Reciver thread");
+        TUI_error(arg->tui, "Failed on creating Client Reciver thread");
     }
 
     arg->run = 1;
