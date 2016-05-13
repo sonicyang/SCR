@@ -15,6 +15,7 @@ struct registered_command_t{
     command_handler_t handler;
     void* argument;
     char command[64];
+    char help[128];
 };
 
 struct TUI_t{
@@ -36,8 +37,9 @@ void TUI_terminate(struct TUI_t*);
 void TUI_write_message(struct TUI_t*, struct message_t*);
 void TUI_error(struct TUI_t*, char*);
 void TUI_print(struct TUI_t*, char*);
+void TUI_prompt_welcome(struct TUI_t*);
 void clear_win(WINDOW*);
 
-void TUI_register_command(struct TUI_t*, char*, command_handler_t, void*);
+void TUI_register_command(struct TUI_t*, char*, char*, command_handler_t, void*);
 
 #endif//__TUI_H__

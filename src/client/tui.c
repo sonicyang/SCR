@@ -12,7 +12,6 @@
 static WINDOW *create_newwin(int, int, int, int);
 static void destroy_win(WINDOW*);
 
-static void TUI_prompt_welcome(struct TUI_t*);
 static void TUI_parse_command(struct TUI_t*, char*);
 static void TUI_refresh(struct TUI_t*);
 void clear_win(WINDOW* local_win);
@@ -39,8 +38,6 @@ void TUI_init(struct TUI_t* tui){
     //Dummy Head
     tui->print_start = list_allocate(tui->message_list);
     init_message(tui->print_start->data, "", 0);
-
-    TUI_prompt_welcome(tui);
 }
 
 void TUI_process(struct TUI_t* tui){
@@ -48,8 +45,10 @@ void TUI_process(struct TUI_t* tui){
     int input_buffer;
     char input[INPUT_BUFFER_SIZE + 1];
 
-    wmove(tui->command_window, 1, 1);
     tui->run = 1;
+    TUI_prompt_welcome(tui);
+
+    wmove(tui->command_window, 1, 1);
     i = 0;
     while(tui->run){
         input_buffer = wgetch(tui->command_window);
@@ -118,6 +117,18 @@ void TUI_error(struct TUI_t* tui, char* str){
     return;
 }
 
+void TUI_print(struct TUI_t* tui, char* str){
+    struct message_t message;
+
+    init_message(&message, "SYSTEM", strlen(str));
+    strcpy(message.buffer, str);
+    TUI_write_message(tui, &message);
+
+    return;
+
+}
+
+
 void TUI_stop(struct TUI_t* tui){
      tui->run = 0;
      return;
@@ -130,7 +141,7 @@ void TUI_terminate(struct TUI_t* tui){
     endwin();
 }
 
-void TUI_register_command(struct TUI_t* tui, char* command, command_handler_t handler, void* argument){
+void TUI_register_command(struct TUI_t* tui, char* command, char* help, command_handler_t handler, void* argument){
     struct registered_command_t* tmp;
     if(strlen(command)){
         tmp = list_allocate(tui->command_chain)->data;
@@ -139,6 +150,9 @@ void TUI_register_command(struct TUI_t* tui, char* command, command_handler_t ha
     }
     strncpy(tmp->command, command, 63);
     tmp->command[63] = '\0';
+
+    strncpy(tmp->help, help, 127);
+    tmp->help[127] = '\0';
 
     tmp->handler = handler;
     tmp->argument = argument;
@@ -151,10 +165,33 @@ void clear_win(WINDOW* local_win){
     wrefresh(local_win);
 }
 
-static void TUI_prompt_welcome(struct TUI_t* tui){
-    mvwprintw(tui->message_window, 1, 1, "Type: /stop to exit");
-    mvwprintw(tui->message_window, 1, 1, "Type: /connect SERVER_IP to connect to a server");
-    wrefresh(tui->message_window);
+void TUI_prompt_welcome(struct TUI_t* tui){
+    struct list_element_t* ptr = tui->command_chain->head;
+    struct registered_command_t* tmp;
+    char buf[255];
+
+    TUI_print(tui, "Welcome to SCR client!");
+    TUI_print(tui, "List of command Supported by SCR client");
+
+    while(ptr != NULL){
+        tmp = (struct registered_command_t*)ptr->data;
+        if(strlen(tmp->command)){
+            buf[0] = '/';
+            buf[1] = '\0';
+            strcat(buf, tmp->command);
+            TUI_print(tui, buf);
+
+            buf[0] = ' ';
+            buf[1] = ' ';
+            buf[2] = ' ';
+            buf[3] = ' ';
+            buf[4] = '\0';
+            strcat(buf, tmp->help);
+            TUI_print(tui, buf);
+        }
+        ptr = ptr->next;
+    }
+    return;
 }
 
 static void TUI_refresh(struct TUI_t* tui){

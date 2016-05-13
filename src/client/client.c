@@ -41,11 +41,10 @@ int main(int argc, char *argv[]){
     tranciver.run = 0;
 
     TUI_init(&tui);
-    TUI_register_command(&tui, "", (command_handler_t)&input_handler, &tranciver);
-    TUI_register_command(&tui, "stop", (command_handler_t)&TUI_stop, &tui);
-    TUI_register_command(&tui, "clear", &clear_message, &tui);
-    TUI_register_command(&tui, "connect", &connect_server, &tranciver);
-    TUI_register_command(&tui, "name", &set_name, &tranciver);
+    TUI_register_command(&tui, "", "", (command_handler_t)&input_handler, &tranciver);
+    TUI_register_command(&tui, "stop", "Exit SCR client", (command_handler_t)&TUI_stop, &tui);
+    TUI_register_command(&tui, "connect", "Connect to remote SCR server, Ex: /connect 127.0.0.1", &connect_server, &tranciver);
+    TUI_register_command(&tui, "name", "Change your name during chat", &set_name, &tranciver);
     TUI_process(&tui);
     TUI_terminate(&tui);
 
