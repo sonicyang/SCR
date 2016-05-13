@@ -163,6 +163,8 @@ static void TUI_refresh(struct TUI_t* tui){
     char now[32];
     struct tm tim;
 
+    box(tui->message_window, 0 , 0);
+
     ptr = tui->message_list->tail;
     for(i = 1; i < LINES - 3 - 2; i++){
         if(ptr->prev != NULL){
