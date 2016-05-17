@@ -5,6 +5,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
 
 #include "list.h"
 #include "misc.h"

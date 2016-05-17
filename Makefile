@@ -55,11 +55,11 @@ all: $(EXECUTABLE)_$(SERVER) $(EXECUTABLE)_$(CLIENT)
 
 $(EXECUTABLE)_$(SERVER): $(SERVER_OBJS)
 	@echo "[ LD ]    "$@
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	@$(CC) $(CFLAGS)  -o $@ $^ $(LDFLAGS)
 
 $(EXECUTABLE)_$(CLIENT): $(CLIENT_OBJS)
 	@echo "[ LD ]    "$@
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	@$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 $(OUTDIR)/%.o: %.c
 	@echo "[ CC ]    "$@

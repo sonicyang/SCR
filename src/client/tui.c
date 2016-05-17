@@ -2,6 +2,9 @@
 #include <string.h>
 #include <errno.h>
 #include <semaphore.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
 
 #include "tui.h"
 #include "list.h"
